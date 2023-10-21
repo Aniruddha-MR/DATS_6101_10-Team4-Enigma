@@ -13,9 +13,9 @@
 ### 6. How closely do individuals' dream weights align with their actual weights?
 
 ## Dataset link 
-# [link]https://www.kaggle.com/datasets/aakashjoshi123/exercise-and-fitness-metrics-dataset/data
-## GitHub report
-# [link]https://github.com/Aniruddha-MR/DATS_6101_10-Team4-Enigma
+# [Dataset link](https://www.kaggle.com/datasets/aakashjoshi123/exercise-and-fitness-metrics-dataset/data)
+## GitHub repo
+# [Github Repo](https://github.com/Aniruddha-MR/DATS_6101_10-Team4-Enigma)
 
 ## Team Members
 ### Yash Kattimani
