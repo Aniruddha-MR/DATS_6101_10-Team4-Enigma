@@ -1,0 +1,111 @@
+---
+title: "Project_yash"
+output: html_document
+date: "2023-10-22"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+setwd = "C:\\Users\\YASH KATTIMANI\\Downloads"
+df = read.csv("C:\\Users\\YASH KATTIMANI\\Downloads\\newexercise_dataset.csv")
+str(df)
+```
+
+```{r}
+df$Exercise = as.factor(df$Exercise)
+```
+
+```{r}
+# put it in the file
+exercise_count <- ggplot(df,aes(x= Exercise,fill = Exercise))+
+  geom_bar()+
+  labs(title ="Distribution of Exercise", x = "Exercise", y = "Count" )+
+  theme(axis.text.x = element_text(angle = 75,hjust = 1))+
+  scale_fill_manual(values = rainbow(length(unique(df$Exercise))))
+print(exercise_count)
+```
+
+```{r}
+# put in the file
+hist(df$Age, main = "Distribution of Age", xlab = "Age", ylab = "Count", col = "lightblue")
+```
+
+```{r}
+# Create a new variable BMI.Classification based on BMI values
+df$BMI.Classification <- ifelse(df$BMI < 18.5, "Underweight",
+                                ifelse(df$BMI < 25, "Healthy weight",
+                                       ifelse(df$BMI < 30, "Overweight", "Obesity")))
+
+# View the first few rows of the updated dataframe to verify the new variable
+head(df)
+
+```
+
+```{r}
+# Create a new variable 'Intensity' based on Exercise.Intensity values
+df$Intensity <- ifelse(df$Exercise.Intensity < 3, "Low Intensity",
+                      ifelse(df$Exercise.Intensity < 6, "Medium Intensity", "High Intensity"))
+
+# View the first few rows of the updated dataframe to verify the new variable
+head(df)
+```
+
+```{r}
+library(ggplot2)
+
+# Assuming you have a data frame named 'df' with a column named 'Age'
+
+ggplot(df, aes(x = Age, fill = Gender)) +
+  geom_histogram(binwidth = 2, alpha = 0.5, color = "black", aes(group = Gender)) +
+  stat_density(geom = "line", aes(color = Gender, group = Gender)) +
+  labs(title = "Age distribution with KDE", x = "Age") +
+  theme_minimal()
+```
+
+```{r}
+library(ggplot2)
+
+# Create a histogram to visualize the relationship between Intensity and Calories.Burn
+exercise_calories <- ggplot(df, aes(x = Intensity, y = Calories.Burn)) +
+  geom_histogram(stat = 'identity', fill = 'blue', color = 'grey') +
+  labs(title = 'Exercise Intensity vs Calories Burn', x = 'Intensity', y = 'Calories Burn') +
+  theme_minimal()
+
+print(exercise_calories)
+```
+
+```{r}
+library(ggplot2)
+
+# Create a countplot
+countplot <- ggplot(df, aes(x = Exercise, fill = Gender)) +
+  geom_bar(position = 'dodge') +
+  labs(title = "Selecting the type of training", x = "Exercise") +
+  theme(axis.text.x = element_text(angle = 75, hjust = 1))
+
+print(countplot)
+
+```
