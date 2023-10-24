@@ -1,0 +1,372 @@
+---
+title: "Final_Yash"
+output: html_document
+date: "2023-10-23"
+---
+
+```{r Setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Installing Required Packages
+```{r Packages}
+#install.packages("ggplot2")
+#install.packages("dplyr")
+#install.packages("corrplot")
+
+library(ggplot2)
+library(dplyr)
+library(corrplot)
+
+```
+
+## Data Preprocessing  
+For the data preprocessing part, we will do three things for now: 
+1. Load the Dataset
+2. Check for Missing Values
+3. Check Variable Datatypes & Typecast if necessary
+
+
+```{r Loading dataset}
+#setwd = "C:\\Users\\YASH KATTIMANI\\Downloads"
+df = read.csv("newexercise_dataset.csv")
+str(df)
+```
+
+```{r Check for Missing Values}
+null_values <- sum(is.na(df))
+print(null_values)
+```
+Turns out there are 0 null values, so we can go ahead without having to worry about this aspect. 
+
+```{r Typecasting}
+#converting exercise from char to factor
+df$Exercise = as.factor(df$Exercise)
+```
+
+## Deep Dataset Analysis
+
+Frequency of different Exercises
+```{r Frequency of different Exercises}
+library(ggplot2)
+exercise_count <- ggplot(df,aes(x= Exercise,fill = Exercise))+
+  geom_bar()+
+  labs(title ="Distribution of Exercise", x = "Exercise", y = "Count" )+
+  theme(axis.text.x = element_text(angle = 75,hjust = 1))+
+  scale_fill_manual(values = rainbow(length(unique(df$Exercise))))
+print(exercise_count)
+```
+
+Classification of BMI values to 4 different categories
+
+```{r Classification of BMI values to 4 categories}
+# Creating a new variable BMI.Classification based on BMI values
+df$BMI.Classification <- ifelse(df$BMI < 18.5, "Underweight",
+                                ifelse(df$BMI < 25, "Healthy weight",
+                                       ifelse(df$BMI < 30, "Overweight", "Obesity")))
+
+head(df)
+```
+
+```{r Plot for classification of BMI values to 4 categories}
+bmi_bar_plot <- ggplot(df, aes(x = BMI.Classification, fill = BMI.Classification)) +
+  geom_bar() +
+  labs(title = "BMI Classification", x = "Classification", y = "Count") +
+  scale_fill_manual(values = c(
+    "Underweight" = "red",
+    "Healthy weight" = "green",
+    "Overweight" = "yellow",
+    "Obesity" = "orange"
+  )) +
+  theme_minimal()
+
+print(bmi_bar_plot)
+```
+
+Classification of Levels of Intensity based on Intensity values
+
+```{r Classification of Levels of Intensity}
+# Creating a new variable 'Intensity' based on Exercise.Intensity values
+df$Intensity <- ifelse(df$Exercise.Intensity < 3, "Low Intensity",
+                      ifelse(df$Exercise.Intensity < 6, "Medium Intensity", "High Intensity"))
+
+# View the first few rows of the updated dataframe to verify the new variable
+head(df)
+```
+
+Converting Heart rate to different levels "Low", "Moderate", "Elevated", "High", "Very High"
+
+```{r Converting Heart rate to different levels}
+breaks <- c(0, 100, 120, 140, 160, Inf)  # Customizing the breaks requirements
+labels <- c("Low", "Moderate", "Elevated", "High", "Very High")
+
+# Use the cut function to categorize Heart Rate into levels
+df$HeartRateLevel <- cut(df$Heart.Rate, breaks = breaks, labels = labels, right = FALSE)
+```
+
+## Analysis of Age
+
+📌Age analysis shows that men are more active until the age of 28, then women dominate. In addition, there are a large number of people over the age of 60.
+
+```{r}
+# Create a density plot with KDE
+density_plot <- ggplot(df, aes(x = Age, fill = Gender, color = Gender)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Age distribution", x = "Age") +
+  theme_minimal() +
+  scale_fill_manual(values = c("blue", "red")) +
+  scale_color_manual(values = c("blue", "red"))
+
+print(density_plot)
+```
+
+```{r}
+hist(df$Age, main = "Distribution of Age", xlab = "Age", ylab = "Count", col = "lightblue")
+```
+
+### Analysis of BMI
+
+Q) Can the combination of heart rate and BMI be used to determine the optimal exercise duration for achieving dream weight?
+```{r Smart Question 2}
+ggplot(df, aes(y=Heart.Rate, x=BMI, color= BMI.Classification)) +
+  geom_point() +
+  ggtitle("Heart Rate and BMI vs Exercise Duration for Achieving Dream Weight")
+```
+
+```{r}
+bmi_bar_plot <- ggplot(df, aes(x = BMI.Classification, fill = BMI.Classification)) +
+  geom_bar() +
+  labs(title = "BMI Classification", x = "Classification", y = "Count") +
+  scale_fill_manual(values = c(
+    "Underweight" = "red",
+    "Healthy weight" = "green",
+    "Overweight" = "yellow",
+    "Obesity" = "orange"
+  )) +
+  theme_minimal()
+
+print(bmi_bar_plot)
+```
+
+```{r}
+# Calculating the distribution of BMI classifications
+bmi_class_counts <- table(df$BMI.Classification)
+
+# Calculating the percentages
+bmi_class_percentages <- prop.table(bmi_class_counts) * 100
+
+# Create a pie chart
+pie(bmi_class_counts, labels = paste(names(bmi_class_counts), "(", round(bmi_class_percentages, 1), "%)"), col = c("red", "green", "blue"))
+title("Distribution by BMI Classification")
+```
+
+```{r}
+countplot <- ggplot(df, aes(x = Exercise, fill = BMI.Classification)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Exercise by BMI Classification", x = "Exercise", y = "Count") +
+  scale_fill_manual(values = c("Underweight" = "yellow","Overweight" = "red", "Obesity" = "green", "Healthy weight" = "blue")) +
+  theme(axis.text.x = element_text(angle = 75, hjust = 1))
+
+print(countplot)
+
+```
+
+different visualization
+
+```{r}
+library(dplyr)
+# Calculate the count and frequency of BMI classifications by Exercise, Gender
+df_summary <- df %>%
+  group_by(Exercise, Gender, BMI.Classification) %>%
+  summarise(count = n()) %>%
+  mutate(frequency = count * 100 / sum(count))
+
+# Create a grouped bar plot
+grouped_bar_plot <- ggplot(df_summary, aes(x = Gender, y = frequency, fill = BMI.Classification)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  scale_fill_manual(values = c("Overweight" = "red", "Obesity" = "green", "Healthy weight" = "blue")) +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+  facet_wrap(~Exercise) +
+  theme_light() +
+  labs(title = "(%) of exercises by gender and BMI Classification", fill = "BMI Classification", x = "", y = "") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  theme(legend.position = "top")
+
+# Display the grouped bar plot
+print(grouped_bar_plot)
+```
+
+## Analysis by Calories burn and Exercise Intensity
+
+Q) How do age, actual weight, and duration collectively influence the relationship between exercise intensity and calorie burn?
+```{r Smart Question 1}
+library(ggplot2)
+ggplot(df, aes(x=Age, y=Calories.Burn, color=Exercise.Intensity)) +
+  geom_point() +
+  ggtitle("Influence of Age on Exercise Intensity and Calorie Burn") +
+  xlab("Age") +
+  ylab("Calories Burnt") +
+  theme(panel.background = element_rect(fill = "white"))
+
+ggplot(df, aes(x=Actual.Weight, y=Calories.Burn, color=Exercise.Intensity)) +
+  geom_point() +
+  ggtitle("Influence of Actual Weight on Exercise Intensity and Calorie Burn") +
+  xlab("Actual Weight") +
+  ylab("Calories Burnt") +
+  theme(panel.background = element_rect(fill = "white"))
+
+ggplot(df, aes(x=Duration, y=Calories.Burn, color=Exercise.Intensity)) +
+  geom_point() +
+  ggtitle("Influence of Duration on Exercise Intensity and Calorie Burn") +
+  xlab("Duration") +
+  ylab("Calories Burnt") +
+  theme(panel.background = element_rect(fill = "white"))
+
+```
+
+
+```{r}
+exercise_calories <- ggplot(df, aes(x = Intensity, y = Calories.Burn)) +
+  geom_histogram(stat = 'identity', fill = 'blue', color = 'grey') +
+  labs(title = 'Exercise Intensity vs Calories Burn', x = 'Intensity', y = 'Calories Burn') +
+  theme_minimal()
+
+print(exercise_calories)
+```
+
+```{r}
+library(ggplot2)
+
+# Calculating efficiency
+df <- transform(df, Efficiency = Calories.Burn / Duration)
+
+# Sorting the data frame by efficiency in descending order
+df <- df[order(-df$Efficiency), ]
+
+# Defining a custom color palette
+my_colors <- c("Aerobics" = "blue", "Strength Training" = "green", "High Intensity Training" = "yellow","Weight Training" = "orange", "Yoga" = "red", "Basic Workout" = "purple", "Cardio" = "pink","Leg Workout" = "brown", "Circuit Training" = "gray", "Core Workout" = "cyan")
+
+# Creating a bar plot
+efficiency_plot <- ggplot(df, aes(x = Efficiency, y = reorder(Exercise, -Efficiency))) +
+  geom_bar(stat = "identity", aes(fill = Exercise)) +
+  scale_fill_manual(values = my_colors) +
+  labs(title = "Exercise Efficiency", x = "Efficiency", y = "Exercise") +
+  theme_minimal()
+
+
+print(efficiency_plot)
+```
+
+```{r}
+# Calculate the count and frequency of exercises by Exercise, Gender, and Intensity
+df_summary <- df %>%
+  group_by(Exercise, Gender, Intensity) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  mutate(frequency = count * 100 / sum(count))
+
+# Create a grouped bar plot
+grouped_bar_plot <- ggplot(df_summary, aes(x = Gender, y = frequency, fill = Intensity)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  scale_fill_manual(values = c("red", "green", "blue", "purple", "orange", "pink", "yellow")) +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+  facet_wrap(~Exercise) +
+  theme_light() +
+  labs(title = "(%) of exercises by gender and intensity", fill = "Intensity", x = "", y = "") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  theme(legend.position = "top")
+
+# Display the grouped bar plot
+print(grouped_bar_plot)
+```
+
+### Analysis by Weather 
+
+Q) Are there exercises that are more commonly performed indoors or outdoors depending on the weather?
+```{r Smart Question 4}
+ggplot(df, aes(y=Exercise, fill=Weather.Conditions)) +
+  geom_bar() +
+  ggtitle("Exercises by Weather Conditions")
+
+```
+
+```{r}
+# Calculate the count and frequency of exercises by Exercise, Gender, and Weather Conditions
+df_summary <- df %>%
+  group_by(Exercise, Gender, Weather.Conditions) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  mutate(frequency = count * 100 / sum(count))
+
+# Create a grouped bar plot
+grouped_bar_plot <- ggplot(df_summary, aes(x = Gender, y = frequency, fill = Weather.Conditions)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  scale_fill_manual(values = c("red", "green", "blue", "purple", "orange", "pink", "yellow", "cyan", "magenta", "lime")) +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+  facet_wrap(~Exercise) +
+  theme_light() +
+  labs(title = "(%) of exercises by gender and weather", fill = "Weather", x = "", y = "") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  theme(legend.position = "top")
+
+# Display the grouped bar plot
+print(grouped_bar_plot)
+```
+
+```{r}
+
+# Create a big grid of scatter plots with facets for Exercise and Weather Conditions
+scatter_grid <- ggplot(df, aes(x = Duration, y = `Exercise.Intensity`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +  # Add a line of best fit
+  facet_grid(Exercise ~ `Weather.Conditions`) +
+  labs(title = "Relationship between weather and exercise", x = "Duration", y = "Exercise Intensity") +
+  theme_minimal()+
+  theme(axis.text.y = element_blank())
+
+# Display the big grid of plots
+print(scatter_grid)
+
+```
+
+## Analysis by Gender
+Q) Do males and females exhibit different patterns in terms of exercise variety?
+```{r Smart Question 3}
+ggplot(df, aes(y=Exercise, fill=Gender)) +
+  geom_bar(position="dodge") +
+  ggtitle("Exercise Variety by Gender")
+```
+
+```{r}
+# Boxplot of BMI by Exercise Type and Gender
+ggplot(df, aes(y=Exercise, x=BMI, fill=Gender)) +
+  geom_boxplot() +
+  ggtitle("Boxplot of BMI by Exercise Type and Gender") +
+  theme(panel.background = element_rect(fill = "white"),
+        plot.background = element_rect(fill = "white"))+
+        scale_fill_viridis(discrete=TRUE)
+
+```
+
+## Analysis by Time 
+
+Q) Can we establish a time-based trend in the dataset, such as changes in exercise preferences over time?
+```{r Smart Question 5}
+ggplot(df, aes(y=factor(Duration), fill=Exercise)) +
+  geom_bar() +
+  ggtitle("Exercise Preferences by Duration")
+
+```
+
+## Analysis by Weight
+
+Q) How closely do individuals' dream weights align with their actual weights?
+```{r Smart Question 6}
+# Create a new variable for the difference between Actual and Dream Weight
+df$Weight.Diff = abs(df$Actual.Weight - df$Dream.Weight)
+df$Weight.Diff.Bin = cut(df$Weight.Diff, breaks = c(0, 5, 10, 15, Inf), labels = c("0-5", "6-10", "11-15", "15+"))
+
+# Create the scatter plot
+ggplot(df, aes(x=Actual.Weight, y=Dream.Weight, color=Weight.Diff.Bin)) +
+  geom_point() +
+  scale_color_manual(values = c("0-5" = "blue", "6-10" = "green", "11-15" = "yellow", "15+" = "red")) +
+  ggtitle("Actual Weight vs Dream Weight")
+```
