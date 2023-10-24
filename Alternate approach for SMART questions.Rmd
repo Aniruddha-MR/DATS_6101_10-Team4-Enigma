@@ -1,0 +1,213 @@
+---
+title: "Midterm project"
+output: html_document
+date: 10/23/2023
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+```{r}
+
+file_path <- "C:\\Users\\mrani\\Downloads\\newexercise_dataset.csv"
+
+df <- data.frame(read.csv(file_path))
+
+# Examine the structure of the dataset
+str(df)
+
+```
+
+
+```{r}
+
+# Converting chr to factor
+df$Exercise <- as.factor(df$Exercise)
+df$Gender <- as.factor(df$Gender)
+df$Weather.Conditions <- as.factor(df$Weather.Conditions)
+str(df)
+
+```
+
+
+```{r}
+summary(df)
+```
+
+
+```{r}
+# NA values
+
+paste("The NA's in the dataset is:",sum(is.na(df)))
+
+```
+```{r}
+
+# Creating a new variable BMI.Classification
+df$BMI.Classification <- ifelse(df$BMI < 18.5, "Underweight",
+                                ifelse(df$BMI < 25, "Healthy weight",
+                                       ifelse(df$BMI < 30, "Overweight", "Obesity")))
+
+# Creating a new variable 'Intensity' based on Exercise.Intensity values
+df$Intensity <- ifelse(df$Exercise.Intensity < 3, "Low Intensity",
+                      ifelse(df$Exercise.Intensity < 6, "Medium Intensity", "High Intensity"))
+
+# Checking the first few rows of the updated dataframe
+head(df)
+
+
+```
+## This code creates new variables 'BMI.Classification' and 'Intensity' based on conditions and checks the first few rows of the updated dataset.
+
+
+```{r}
+# This code generates a histogram with a KDE (Kernel Density Estimation) overlay, showing the age distribution by gender.
+
+library(ggplot2)
+
+ggplot(df, aes(x = Age, fill = Gender)) +
+  geom_histogram(binwidth = 2, alpha = 0.5, color = "black", aes(group = Gender)) +
+  stat_density(geom = "line", aes(color = Gender, group = Gender)) +
+  labs(title = "Age distribution with KDE", x = "Age") +
+  theme_minimal()
+```
+```{r}
+# This code creates a histogram to visualize the relationship between exercise intensity and calories burned.
+
+exercise_calories <- ggplot(df, aes(x = Intensity, y = Calories.Burn)) +
+  geom_histogram(stat = 'identity', fill = 'blue', color = 'grey') +
+  labs(title = 'Exercise Intensity vs Calories Burn', x = 'Intensity', y = 'Calories Burn') +
+  theme_minimal()
+
+print(exercise_calories)
+
+```
+```{r}
+# Age vs. Calories Burn
+
+ggplot(df, aes(x = Age, y = Calories.Burn)) +
+  geom_point() +
+  labs(title = "Age vs. Calories Burn", x = "Age", y = "Calories Burn") +
+  theme_minimal()
+
+```
+```{r}
+# Gender vs. Exercise variety
+library(dplyr)
+
+df %>%
+  group_by(Gender, Exercise) %>%
+  summarise(Count = n()) %>%
+  ggplot(aes(x = Exercise, y = Count, fill = Gender)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Gender Differences in Exercise Variety", x = "Exercise", y = "Count") +
+  theme(axis.text.x = element_text(angle = 75, hjust = 1))
+
+```
+
+```{r}
+# Indoor vs. Outdoor Exercises by Weather
+library(tidyr)
+
+df %>%
+  group_by(Weather.Conditions, Exercise) %>%
+  summarise(Count = n()) %>%
+  pivot_wider(names_from = Weather.Conditions, values_from = Count, values_fill = 0) %>%
+  ggplot(aes(x = Exercise, y = `Sunny`, fill = `Cloudy`)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Indoor vs. Outdoor Exercises by Weather", x = "Exercise", y = "Count") +
+  theme(axis.text.x = element_text(angle = 75, hjust = 1))
+
+
+```
+
+## SMART Questions
+
+### Q1: How do age, actual weight, and duration collectively influence the relationship between exercise intensity and calorie burn?
+
+```{r Q1}
+library(ggplot2)
+
+ggplot(df, aes(x = Intensity, y = Calories.Burn, size = Age, color = Actual.Weight, alpha = Duration)) +
+  geom_point() +
+  scale_color_continuous() +
+  scale_alpha_continuous(range = c(0.2, 0.8)) +
+  labs(title = "Influence of Age, Actual Weight, and Duration on Exercise Intensity and Calorie Burn",
+       x = "Exercise Intensity", y = "Calories Burn") +
+  theme_minimal()
+
+```
+
+### Q2: Can we establish a time based trend in the dataset, such as changes in exercise preferences,calorie expenditure, or weight measurements over time?
+
+```{r Q2}
+
+exercise_trend <- df %>%
+  group_by(Exercise, Age) %>%
+  summarise(Count = n())
+
+ggplot(exercise_trend, aes(x = Age, y = Count, color = Exercise)) +
+  geom_line() +
+  labs(title = "Trend in Exercise Preferences Over Time", x = "Age", y = "Count") +
+  theme_minimal()
+
+
+```
+
+### Q3: Do males and females exhibit different patterns in terms of exercise variety?
+
+```{r Q3}
+
+df %>%
+  group_by(Gender, Exercise) %>%
+  summarise(Count = n()) %>%
+  ggplot(aes(x = Exercise, y = Count, fill = Gender)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Gender Differences in Exercise Variety", x = "Exercise", y = "Count") +
+  theme(axis.text.x = element_text(angle = 75, hjust = 1))
+
+
+```
+
+### Q4: Are there exercises more commonly performed indoors or outdoors, depending on the weather?
+
+```{r Q4}
+
+df %>%
+  group_by(Weather.Conditions, Exercise) %>%
+  summarise(Count = n()) %>%
+  pivot_wider(names_from = Weather.Conditions, values_from = Count, values_fill = 0) %>%
+  ggplot(aes(x = Exercise, y = `Sunny`, fill = `Cloudy`)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Indoor vs. Outdoor Exercises by Weather", x = "Exercise", y = "Count") +
+  theme(axis.text.x = element_text(angle = 75, hjust = 1))
+
+
+```
+
+### Q5: Can the combination of heart rate and BMI be used to determine the optimal exercise duration for achieving dream weight?
+
+```{r Q5}
+
+ggplot(df, aes(x = Heart.Rate, y = BMI, color = Duration)) +
+  geom_point() +
+  labs(title = "Heart Rate vs. BMI (Color: Duration)", x = "Heart Rate", y = "BMI") +
+  theme_minimal()
+
+
+```
+
+### Q6: How closely do individuals' dream weights align with their actual weights?
+
+```{r Q6}
+
+ggplot(df, aes(x = Dream.Weight, y = Actual.Weight)) +
+  geom_point() +
+  labs(title = "Dream Weight vs. Actual Weight", x = "Dream Weight", y = "Actual Weight") +
+  theme_minimal()
+
+
+```
+
