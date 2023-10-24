@@ -19,6 +19,11 @@ str(df)
 df$Exercise = as.factor(df$Exercise)
 ```
 
+```{r}
+df$Gender <- as.factor(df$Gender)
+df$Weather.Conditions <- as.factor(df$Weather.Conditions)
+```
+
 ## Deep Dataset Analysis
 
 Frequency of different Exercises
@@ -78,6 +83,12 @@ labels <- c("Low", "Moderate", "Elevated", "High", "Very High")
 
 # Use the cut function to categorize Heart Rate into levels
 df$HeartRateLevel <- cut(df$Heart.Rate, breaks = breaks, labels = labels, right = FALSE)
+```
+
+```{r}
+df$BMI.Classification <- as.factor(df$BMI.Classification)
+df$Intensity <- as.factor(df$Intensity)
+df$Heart.Rate <- as.numeric(df$Heart.Rate)
 ```
 
 ## Analysis of age
@@ -259,4 +270,10 @@ scatter_grid <- ggplot(df, aes(x = Duration, y = `Exercise.Intensity`)) +
 # Display the big grid of plots
 print(scatter_grid)
 
+```
+
+### Correlation Matrix
+
+```{r}
+str(df)
 ```
