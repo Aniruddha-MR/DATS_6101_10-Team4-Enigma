@@ -9,6 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Installing Required Packages
+
 ```{r Packages}
 #install.packages("ggplot2")
 #install.packages("dplyr")
@@ -20,12 +21,9 @@ library(corrplot)
 
 ```
 
-## Data Preprocessing  
-For the data preprocessing part, we will do three things for now: 
-1. Load the Dataset
-2. Check for Missing Values
-3. Check Variable Datatypes & Typecast if necessary
+## Data Preprocessing
 
+For the data preprocessing part, we will do three things for now: 1. Load the Dataset 2. Check for Missing Values 3. Check Variable Datatypes & Typecast if necessary
 
 ```{r Loading dataset}
 #setwd = "C:\\Users\\YASH KATTIMANI\\Downloads"
@@ -37,7 +35,8 @@ str(df)
 null_values <- sum(is.na(df))
 print(null_values)
 ```
-Turns out there are 0 null values, so we can go ahead without having to worry about this aspect. 
+
+Turns out there are 0 null values, so we can go ahead without having to worry about this aspect.
 
 ```{r Typecasting}
 #converting exercise from char to factor
@@ -46,10 +45,10 @@ df$Gender <- as.factor(df$Gender)
 df$Weather.Conditions <- as.factor(df$Weather.Conditions)
 ```
 
-
 ## Deep Dataset Analysis
 
 Frequency of different Exercises
+
 ```{r Frequency of different Exercises}
 library(ggplot2)
 exercise_count <- ggplot(df,aes(x= Exercise,fill = Exercise))+
@@ -58,6 +57,7 @@ exercise_count <- ggplot(df,aes(x= Exercise,fill = Exercise))+
   theme(axis.text.x = element_text(angle = 75,hjust = 1))+
   scale_fill_manual(values = rainbow(length(unique(df$Exercise))))
 print(exercise_count)
+
 ```
 
 Classification of BMI values to 4 different categories
@@ -69,21 +69,6 @@ df$BMI.Classification <- ifelse(df$BMI < 18.5, "Underweight",
                                        ifelse(df$BMI < 30, "Overweight", "Obesity")))
 
 head(df)
-```
-
-```{r Plot for classification of BMI values to 4 categories}
-bmi_bar_plot <- ggplot(df, aes(x = BMI.Classification, fill = BMI.Classification)) +
-  geom_bar() +
-  labs(title = "BMI Classification", x = "Classification", y = "Count") +
-  scale_fill_manual(values = c(
-    "Underweight" = "red",
-    "Healthy weight" = "green",
-    "Overweight" = "yellow",
-    "Obesity" = "orange"
-  )) +
-  theme_minimal()
-
-print(bmi_bar_plot)
 ```
 
 Classification of Levels of Intensity based on Intensity values
@@ -124,31 +109,68 @@ print(density_plot)
 ```
 
 ```{r}
-hist(df$Age, main = "Distribution of Age", xlab = "Age", ylab = "Count", col = "lightblue")
+# Load the ggplot2 library
+library(ggplot2)
+
+# Create a histogram with ggplot2
+hist_plot <- ggplot(df, aes(x = Age)) +
+  geom_histogram(binwidth = 5, fill = "lightblue", color = "black") +
+  labs(title = "Distribution of Age", x = "Age", y = "Count") +
+  theme_minimal()
+
+# Calculate the percentage of each bin and add percentage labels
+hist_plot <- hist_plot +
+  stat_bin(
+    binwidth = 5, 
+    geom = "text", 
+    aes(label = scales::percent(..count.. / sum(..count..))),
+    position = position_stack(vjust = 0.5)
+  )
+
+# Display the histogram plot
+print(hist_plot)
 ```
 
 ### Analysis of BMI
 
-Q) Can the combination of heart rate and BMI be used to determine the optimal exercise duration for achieving dream weight?
+Q)  Can the combination of heart rate and BMI be used to determine the optimal exercise duration for achieving dream weight?
+
 ```{r Smart Question 2}
 ggplot(df, aes(y=Heart.Rate, x=BMI, color= BMI.Classification)) +
   geom_point() +
   ggtitle("Heart Rate and BMI vs Exercise Duration for Achieving Dream Weight")
 ```
 
-```{r}
+```{r Plot for classification of BMI values to 4 categories}
+library(ggplot2)
+
+# Create a bar plot
 bmi_bar_plot <- ggplot(df, aes(x = BMI.Classification, fill = BMI.Classification)) +
   geom_bar() +
   labs(title = "BMI Classification", x = "Classification", y = "Count") +
   scale_fill_manual(values = c(
     "Underweight" = "red",
-    "Healthy weight" = "green",
-    "Overweight" = "yellow",
+    "Healthy weight" = "lightgreen",
+    "Overweight" = "maroon",
     "Obesity" = "orange"
   )) +
   theme_minimal()
 
+# Calculate and add percentage labels to each bar
+bmi_bar_plot <- bmi_bar_plot +
+  geom_text(
+    aes(label = scales::percent(..count.. / sum(..count..)),
+        y = ..count..,
+        group = BMI.Classification),
+    stat = "count",
+    vjust = -0.5,  # Adjust the vertical position of labels
+    hjust = 0.5,   # Center the labels horizontally
+    position = position_stack(vjust = 0.5)
+  )
+
+# Display the bar plot
 print(bmi_bar_plot)
+
 ```
 
 ```{r}
@@ -164,6 +186,18 @@ title("Distribution by BMI Classification")
 ```
 
 ```{r}
+# Calculating the distribution of BMI classifications
+#bmi_class_counts <- table(df$BMI.Classification)
+
+# Calculating the percentages
+#bmi_class_percentages <- prop.table(bmi_class_counts) * 100
+
+# Create a pie chart
+#pie(bmi_class_counts, labels = paste(names(bmi_class_counts), "(", round(bmi_class_percentages, 1), "%)"), col = c("red", "green", "blue"))
+#title("Distribution by BMI Classification")
+```
+
+```{r}
 countplot <- ggplot(df, aes(x = Exercise, fill = BMI.Classification)) +
   geom_bar(position = "dodge") +
   labs(title = "Exercise by BMI Classification", x = "Exercise", y = "Count") +
@@ -174,7 +208,63 @@ print(countplot)
 
 ```
 
+```{r}
+library(ggplot2)
+
+# Create a bar plot
+bar_plot <- ggplot(df, aes(x = Exercise, fill = BMI.Classification)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Exercise by BMI Classification", x = "Exercise", y = "Count") +
+  scale_fill_manual(values = c(
+    "Underweight" = "yellow",
+    "Overweight" = "red",
+    "Obesity" = "green",
+    "Healthy weight" = "blue"
+  )) +
+  theme(axis.text.x = element_text(angle = 75, hjust = 1))
+
+# Create a box plot
+box_plot <- ggplot(df, aes(x = Exercise, y = Exercise.Intensity, fill = BMI.Classification)) +
+  geom_boxplot(position = position_dodge(width = 0.8)) +
+  labs(title = "Exercise Intensity by BMI Classification", x = "Exercise", y = "Exercise Intensity") +
+  scale_fill_manual(values = c(
+    "Underweight" = "yellow",
+    "Overweight" = "red",
+    "Obesity" = "green",
+    "Healthy weight" = "blue"
+  )) +
+  theme(axis.text.x = element_text(angle = 75, hjust = 1))
+
+# Display the bar plot
+print(bar_plot)
+
+# Display the box plot
+print(box_plot)
+
+```
+
 different visualization
+
+```{r}
+df_summary <- df %>%
+  group_by(Exercise, Gender) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  mutate(frequency = count * 100 / sum(count))
+
+# Create a grouped bar plot
+grouped_bar_plot <- ggplot(df_summary, aes(x = Gender, y = frequency, fill = Gender)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  scale_fill_manual(values = c( "pink","lightblue")) +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+  facet_wrap(~Exercise) +
+  theme_light() +
+  labs(title = "(%) of exercises by gender", fill = "Gender", x = "", y = "") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  theme(legend.position = "top")
+
+# Display the grouped bar plot
+print(grouped_bar_plot)
+```
 
 ```{r}
 library(dplyr)
@@ -201,7 +291,8 @@ print(grouped_bar_plot)
 
 ## Analysis by Calories burn and Exercise Intensity
 
-Q) How do age, actual weight, and duration collectively influence the relationship between exercise intensity and calorie burn?
+Q)  How do age, actual weight, and duration collectively influence the relationship between exercise intensity and calorie burn?
+
 ```{r Smart Question 1}
 library(ggplot2)
 ggplot(df, aes(x=Age, y=Calories.Burn, color=Exercise.Intensity)) +
@@ -227,6 +318,19 @@ ggplot(df, aes(x=Duration, y=Calories.Burn, color=Exercise.Intensity)) +
 
 ```
 
+```{r}
+# Create a scatterplot to visualize the relationship between Age, Duration, and Calories.Burn
+library(ggplot2)
+
+scatterplot <- ggplot(df, aes(x = Age, y = Duration, color = Calories.Burn)) +
+  geom_point() +
+  labs(title = "Relationship between Age, Duration, and Calorie Burn", x = "Age", y = "Duration") +
+  scale_color_gradient(low = "blue", high = "red") +
+  theme_minimal()
+
+print(scatterplot)
+
+```
 
 ```{r}
 exercise_calories <- ggplot(df, aes(x = Intensity, y = Calories.Burn)) +
@@ -282,11 +386,12 @@ grouped_bar_plot <- ggplot(df_summary, aes(x = Gender, y = frequency, fill = Int
 print(grouped_bar_plot)
 ```
 
-### Analysis by Weather 
+### Analysis by Weather
 
-Q) Are there exercises that are more commonly performed indoors or outdoors depending on the weather?
+Q)  Are there exercises that are more commonly performed indoors or outdoors depending on the weather?
+
 ```{r Smart Question 4}
-ggplot(df, aes(y=Exercise, fill=Weather.Conditions)) +
+ggplot(df, aes(x=Exercise, fill=Weather.Conditions)) +
   geom_bar() +
   ggtitle("Exercises by Weather Conditions")
 
@@ -330,38 +435,59 @@ print(scatter_grid)
 
 ```
 
+📌As you can see, the intensity and duration of training in some exercises depends on the weather.
+
 ## Analysis by Gender
-Q) Do males and females exhibit different patterns in terms of exercise variety?
+
+Q)  Do males and females exhibit different patterns in terms of exercise variety?
+
 ```{r Smart Question 3}
-ggplot(df, aes(y=Exercise, fill=Gender)) +
-  geom_bar(position="dodge") +
+library(ggplot2)
+
+# Create the bar plot
+bar_plot <- ggplot(df, aes(x = Exercise, fill = Gender)) +
+  geom_bar(position = "dodge") +
+  theme(axis.text.x = element_text(angle = 75, hjust = 1)) +
   ggtitle("Exercise Variety by Gender")
+
+# Display the plot
+print(bar_plot)
+
 ```
 
 ```{r}
-# Boxplot of BMI by Exercise Type and Gender
-ggplot(df, aes(y=Exercise, x=BMI, fill=Gender)) +
+library(ggplot2)
+library(viridis)  # Load the viridis package
+
+# Create the box plot with the x and y axes interchanged
+box_plot <- ggplot(df, aes(x = Exercise, y = BMI, fill = Gender)) +
   geom_boxplot() +
   ggtitle("Boxplot of BMI by Exercise Type and Gender") +
-  theme(panel.background = element_rect(fill = "white"),
-        plot.background = element_rect(fill = "white"))+
-        scale_fill_viridis(discrete=TRUE)
+  theme(axis.text.x = element_text(angle = 75, hjust =1),panel.background = element_rect(fill = "white"),
+        plot.background = element_rect(fill = "white")) +
+  scale_fill_viridis(discrete = TRUE)
+
+# Display the plot
+print(box_plot)
 
 ```
 
-## Analysis by Time 
+## Analysis by Time
 
-Q) Can we establish a time-based trend in the dataset, such as changes in exercise preferences over time?
+Q)  Can we establish a time-based trend in the dataset, such as changes in exercise preferences over time?
+
 ```{r Smart Question 5}
-ggplot(df, aes(y=factor(Duration), fill=Exercise)) +
+ggplot(df, aes(x=factor(Duration), fill=Exercise)) +
   geom_bar() +
+  theme(axis.text.x = element_text(angle = 75, hjust =1))+
   ggtitle("Exercise Preferences by Duration")
 
 ```
 
 ## Analysis by Weight
 
-Q) How closely do individuals' dream weights align with their actual weights?
+Q)  How closely do individuals' dream weights align with their actual weights?
+
 ```{r Smart Question 6}
 # Create a new variable for the difference between Actual and Dream Weight
 df$Weight.Diff = abs(df$Actual.Weight - df$Dream.Weight)
@@ -375,27 +501,20 @@ ggplot(df, aes(x=Actual.Weight, y=Dream.Weight, color=Weight.Diff.Bin)) +
 ```
 
 ## Statistical Tests
-Q) Do weather conditions have a statistically significant impact on the number of calories burned during exercise?"
-Ans) A suitable test for this question would be Analysis of Variance (ANOVA), particularly since we have more than two weather conditions in our dataset (e.g., Sunny, Rainy, Cloudy).
 
-**1. Data Filtering**
-First, lets remove any missing values for 'Weather Conditions' and 'Calories Burn'.
-But turns out there are no missing values in our data as we checked earlier. So we can proceed to the next step. 
+Q)  Do weather conditions have a statistically significant impact on the number of calories burned during exercise?" Ans) A suitable test for this question would be Analysis of Variance (ANOVA), particularly since we have more than two weather conditions in our dataset (e.g., Sunny, Rainy, Cloudy).
 
-**2. Data Grouping**
-First, lets remove any missing values for 'Weather Conditions' and 'Calories Burn'.
-But turns out there are no missing values in our data as we checked earlier. So we can proceed to the next step. 
+**1. Data Filtering** First, lets remove any missing values for 'Weather Conditions' and 'Calories Burn'. But turns out there are no missing values in our data as we checked earlier. So we can proceed to the next step.
 
+**2. Data Grouping** First, lets remove any missing values for 'Weather Conditions' and 'Calories Burn'. But turns out there are no missing values in our data as we checked earlier. So we can proceed to the next step.
 
 ## One Way Anova Test
 
 ### Q) Is there a significant difference in the 'Calories Burn' across different 'BMI Classification' groups?
 
-Solution: 
+Solution:
 
-***Defining the Hypothesis:
-H0: The mean 'Calories Burn' is the same for all 'BMI Classification' groups.
-H1: At least one 'BMI Classification' group has a different mean 'Calories Burn'.***
+***Defining the Hypothesis: H0: The mean 'Calories Burn' is the same for all 'BMI Classification' groups. H1: At least one 'BMI Classification' group has a different mean 'Calories Burn'.***
 
 ```{r}
 # One-Way ANOVA
@@ -413,13 +532,15 @@ print(anova_summary)
 posthoc <- TukeyHSD(anova_result)
 print(posthoc)
 ```
-### Interpretation: 
 
-1. ANOVA: The p-value from the ANOVA test is 0.509, which is greater than 0.05. This means that we fail to reject the null hypothesis (H0), suggesting there is no significant difference in 'Calories Burn' across the different 'BMI Classifications' in out dataset. 
+### Interpretation:
 
-2. Post-Hoc Test: The Tukey HSD test also supports this result. All pairwise comparisons have adjusted p-values greater than 0.05, confirming that the mean 'Calories Burn' is not significantly different between any two 'BMI Classification' groups.
+1.  ANOVA: The p-value from the ANOVA test is 0.509, which is greater than 0.05. This means that we fail to reject the null hypothesis (H0), suggesting there is no significant difference in 'Calories Burn' across the different 'BMI Classifications' in out dataset.
+
+2.  Post-Hoc Test: The Tukey HSD test also supports this result. All pairwise comparisons have adjusted p-values greater than 0.05, confirming that the mean 'Calories Burn' is not significantly different between any two 'BMI Classification' groups.
 
 ### Visualizations to Support ANOVA Findings
+
 ```{r}
 # Load ggplot2 package
 library(ggplot2)
@@ -454,14 +575,73 @@ ggplot(df, aes(x=BMI.Classification, y=Calories.Burn)) +
 
 ```
 
-1. Boxplot: The boxplot shows the median, quartiles, and outliers for 'Calories Burn' for each 'BMI Classification'. The overlap of the interquartile ranges suggests that there's no significant difference in 'Calories Burn' across the groups.
+1.  Boxplot: The boxplot shows the median, quartiles, and outliers for 'Calories Burn' for each 'BMI Classification'. The overlap of the interquartile ranges suggests that there's no significant difference in 'Calories Burn' across the groups.
 
-2. Violinplot: The violinplot combines a boxplot with a kernel density estimation. It provides more information about the density of the data points at different calorie levels. Again, the shapes of the "violins" are quite similar for all categories, indicating no significant difference in 'Calories Burn'.
+2.  Violinplot: The violinplot combines a boxplot with a kernel density estimation. It provides more information about the density of the data points at different calorie levels. Again, the shapes of the "violins" are quite similar for all categories, indicating no significant difference in 'Calories Burn'.
 
-3. Boxplot and Swarmplot: The swarmplot overlay on the boxplot displays individual data points, sampled to avoid clutter. This provides a sense of the data distribution while still summarizing it with a boxplot. Once more, the distribution of points appears quite similar across the 'BMI Classification' groups.
+3.  Boxplot and Swarmplot: The swarmplot overlay on the boxplot displays individual data points, sampled to avoid clutter. This provides a sense of the data distribution while still summarizing it with a boxplot. Once more, the distribution of points appears quite similar across the 'BMI Classification' groups.
 
+### Correlation
 
+```{r}
+df$Gender <- as.factor(df$Gender)
+df$BMI.Classification <- as.factor(df$BMI.Classification)
+df$Weather.Conditions <- as.factor(df$Weather.Conditions)
+df$Intensity <- as.factor(df$Intensity)
+df$Duration <- as.numeric(df$Duration)
+```
 
+```{r}
+# Identify the numeric columns
+numeric_columns <- sapply(df, is.numeric)
 
-### Final Takeaway: 
+# Calculate the correlation matrix for numeric variables
+correlation <- cor(df[, numeric_columns], use = "complete.obs")
+```
+
+```{r}
+correlation <- correlation[-which(rownames(correlation) == "ID"), -which(colnames(correlation) == "ID")]
+
+library(corrplot)
+
+# Create the correlation heatmap
+corrplot(correlation, method = "color", type = "upper", tl.col = "black", tl.srt = 45, 
+         diag = FALSE, addCoef.col = "black", tl.cex = 0.7)
+
+# Add a title
+title("Correlation Heatmap")
+```
+
+### Linear Model
+
+```{r}
+linear_model <- lm(Calories.Burn ~ Efficiency + Duration, data = df)
+
+# Summarize the model
+summary(linear_model)
+```
+
+The linear regression model aims to predict "Calories Burn" based on two predictor variables: "Efficiency" and "Duration." Here are some observations based on the model's summary:
+
+1.  **Model Fit**: The model provides a good fit for the data, with an adjusted R-squared value of 0.8515. This indicates that approximately 85.15% of the variance in "Calories Burn" is explained by the predictors, "Efficiency" and "Duration."
+
+2.  **Significant Predictors**: Both predictor variables, "Efficiency" and "Duration," are statistically significant in predicting "Calories Burn." The p-values associated with these predictors are very close to zero, suggesting a strong relationship between the predictors and the target variable.
+
+3.  **Intercept**: The intercept term (-233.63370) represents the estimated "Calories Burn" when both "Efficiency" and "Duration" are zero. While this value may not have a practical interpretation in this context, it's essential for the model's calculations.
+
+4.  **Coefficients**: The coefficients for the predictor variables provide insights into the relationship between each predictor and the target variable.
+
+    -   For "Efficiency," a one-unit increase results in an estimated increase of approximately 31 calories burned.
+    -   For "Duration," a one-minute increase results in an estimated increase of approximately 7 calories burned.
+
+5.  **Residuals**: The residuals indicate the model's prediction errors. The residuals are relatively symmetrically distributed around zero, suggesting that the model's assumptions about errors are reasonably met.
+
+6.  **F-Statistic**: The F-statistic tests whether the overall model is a good fit for the data. With a very high F-statistic and an associated p-value close to zero, it suggests that the model as a whole is a good fit.
+
+7.  **Residual Standard Error**: The residual standard error of 44.64 provides a measure of the typical prediction error of the model. Smaller values indicate better model fit.
+
+In summary, this linear regression model is highly significant and explains a substantial portion of the variance in "Calories Burn." Both "Efficiency" and "Duration" are strong predictors of calorie burn, with efficiency having the most substantial effect. However, it's essential to remember that regression models imply association, and they don't establish causation. Other factors not included in the model could also influence calorie burn.
+
+### Final Takeaway:
+
 Based on these results, we can conclude that our initial hypothesis, which was to find out if there is a significant difference in 'Calories Burn' across 'BMI Classification' groups, is not supported by the data. Both the ANOVA and the post-hoc Tukey HSD test indicate that there are no significant differences in the 'Calories Burn' among the different 'BMI Classification' categories. Furthermore, all these visualizations reinforce the ANOVA findings that there is no significant difference in the 'Calories Burn' across different 'BMI Classification' categories.
