@@ -2,6 +2,16 @@
 title: "Final_Yash"
 output: html_document
 date: "2023-10-23"
+output:
+  html_document:
+    code_folding: hide
+    number_sections: false
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
 ---
 
 ```{r Setup, include=FALSE}
@@ -96,7 +106,7 @@ df$HeartRateLevel <- cut(df$Heart.Rate, breaks = breaks, labels = labels, right 
 
 📌Age analysis shows that men are more active until the age of 28, then women dominate. In addition, there are a large number of people over the age of 60.
 
-```{r}
+```{r Age distribution density}
 # Create a density plot with KDE
 density_plot <- ggplot(df, aes(x = Age, fill = Gender, color = Gender)) +
   geom_density(alpha = 0.5) +
@@ -108,7 +118,7 @@ density_plot <- ggplot(df, aes(x = Age, fill = Gender, color = Gender)) +
 print(density_plot)
 ```
 
-```{r}
+```{r Age distribution hist}
 # Load the ggplot2 library
 library(ggplot2)
 
@@ -133,15 +143,15 @@ print(hist_plot)
 
 ### Analysis of BMI
 
-Q)  Can the combination of heart rate and BMI be used to determine the optimal exercise duration for achieving dream weight?
+Q5) Can the combination of heart rate and BMI be used to determine the optimal exercise duration for achieving dream weight?
 
-```{r Smart Question 2}
+```{r Smart Question 5}
 ggplot(df, aes(y=Heart.Rate, x=BMI, color= BMI.Classification)) +
   geom_point() +
   ggtitle("Heart Rate and BMI vs Exercise Duration for Achieving Dream Weight")
 ```
 
-```{r Plot for classification of BMI values to 4 categories}
+```{r Plot for classification of BMI values to 3 categories}
 library(ggplot2)
 
 # Create a bar plot
@@ -173,7 +183,7 @@ print(bmi_bar_plot)
 
 ```
 
-```{r}
+```{r Plot for classification of BMI values to 3 categories pie chart}
 # Calculating the distribution of BMI classifications
 bmi_class_counts <- table(df$BMI.Classification)
 
@@ -185,31 +195,12 @@ pie(bmi_class_counts, labels = paste(names(bmi_class_counts), "(", round(bmi_cla
 title("Distribution by BMI Classification")
 ```
 
-```{r}
-# Calculating the distribution of BMI classifications
-#bmi_class_counts <- table(df$BMI.Classification)
 
-# Calculating the percentages
-#bmi_class_percentages <- prop.table(bmi_class_counts) * 100
 
-# Create a pie chart
-#pie(bmi_class_counts, labels = paste(names(bmi_class_counts), "(", round(bmi_class_percentages, 1), "%)"), col = c("red", "green", "blue"))
-#title("Distribution by BMI Classification")
-```
 
-```{r}
-countplot <- ggplot(df, aes(x = Exercise, fill = BMI.Classification)) +
-  geom_bar(position = "dodge") +
-  labs(title = "Exercise by BMI Classification", x = "Exercise", y = "Count") +
-  scale_fill_manual(values = c("Underweight" = "yellow","Overweight" = "red", "Obesity" = "green", "Healthy weight" = "blue")) +
-  theme(axis.text.x = element_text(angle = 75, hjust = 1))
 
-print(countplot)
 
-```
-
-```{r}
-library(ggplot2)
+```{r Exercise by BMI Classification & Box plot}
 
 # Create a bar plot
 bar_plot <- ggplot(df, aes(x = Exercise, fill = BMI.Classification)) +
@@ -245,7 +236,7 @@ print(box_plot)
 
 different visualization
 
-```{r}
+```{r percentage of exercises by gender}
 df_summary <- df %>%
   group_by(Exercise, Gender) %>%
   summarise(count = n(), .groups = "drop") %>%
@@ -266,7 +257,7 @@ grouped_bar_plot <- ggplot(df_summary, aes(x = Gender, y = frequency, fill = Gen
 print(grouped_bar_plot)
 ```
 
-```{r}
+```{r percentage of exercises by gender and BMI Classification}
 library(dplyr)
 # Calculate the count and frequency of BMI classifications by Exercise, Gender
 df_summary <- df %>%
@@ -291,7 +282,7 @@ print(grouped_bar_plot)
 
 ## Analysis by Calories burn and Exercise Intensity
 
-Q)  How do age, actual weight, and duration collectively influence the relationship between exercise intensity and calorie burn?
+Q1) How do age, actual weight, and duration collectively influence the relationship between exercise intensity and calorie burn?
 
 ```{r Smart Question 1}
 library(ggplot2)
@@ -318,7 +309,7 @@ ggplot(df, aes(x=Duration, y=Calories.Burn, color=Exercise.Intensity)) +
 
 ```
 
-```{r}
+```{r Relationship between Age, Duration, and Calorie Burn}
 # Create a scatterplot to visualize the relationship between Age, Duration, and Calories.Burn
 library(ggplot2)
 
@@ -332,7 +323,7 @@ print(scatterplot)
 
 ```
 
-```{r}
+```{r Exercise Intensity vs Calories Burn}
 exercise_calories <- ggplot(df, aes(x = Intensity, y = Calories.Burn)) +
   geom_histogram(stat = 'identity', fill = 'blue', color = 'grey') +
   labs(title = 'Exercise Intensity vs Calories Burn', x = 'Intensity', y = 'Calories Burn') +
@@ -341,7 +332,7 @@ exercise_calories <- ggplot(df, aes(x = Intensity, y = Calories.Burn)) +
 print(exercise_calories)
 ```
 
-```{r}
+```{r Exercise Efficiency}
 library(ggplot2)
 
 # Calculating efficiency
@@ -364,7 +355,7 @@ efficiency_plot <- ggplot(df, aes(x = Efficiency, y = reorder(Exercise, -Efficie
 print(efficiency_plot)
 ```
 
-```{r}
+```{r percentage of exercises by gender and intensity}
 # Calculate the count and frequency of exercises by Exercise, Gender, and Intensity
 df_summary <- df %>%
   group_by(Exercise, Gender, Intensity) %>%
@@ -388,7 +379,7 @@ print(grouped_bar_plot)
 
 ### Analysis by Weather
 
-Q)  Are there exercises that are more commonly performed indoors or outdoors depending on the weather?
+Q4) Are there exercises that are more commonly performed indoors or outdoors depending on the weather?
 
 ```{r Smart Question 4}
 ggplot(df, aes(x=Exercise, fill=Weather.Conditions)) +
@@ -397,7 +388,7 @@ ggplot(df, aes(x=Exercise, fill=Weather.Conditions)) +
 
 ```
 
-```{r}
+```{r percentage of exercises by gender and weather}
 # Calculate the count and frequency of exercises by Exercise, Gender, and Weather Conditions
 df_summary <- df %>%
   group_by(Exercise, Gender, Weather.Conditions) %>%
@@ -419,7 +410,7 @@ grouped_bar_plot <- ggplot(df_summary, aes(x = Gender, y = frequency, fill = Wea
 print(grouped_bar_plot)
 ```
 
-```{r}
+```{r Relationship between weather and exercise}
 
 # Create a big grid of scatter plots with facets for Exercise and Weather Conditions
 scatter_grid <- ggplot(df, aes(x = Duration, y = `Exercise.Intensity`)) +
@@ -439,7 +430,7 @@ print(scatter_grid)
 
 ## Analysis by Gender
 
-Q)  Do males and females exhibit different patterns in terms of exercise variety?
+Q3) Do males and females exhibit different patterns in terms of exercise variety?
 
 ```{r Smart Question 3}
 library(ggplot2)
@@ -455,7 +446,7 @@ print(bar_plot)
 
 ```
 
-```{r}
+```{r Boxplot of BMI by Exercise Type and Gender}
 library(ggplot2)
 library(viridis)  # Load the viridis package
 
@@ -474,9 +465,9 @@ print(box_plot)
 
 ## Analysis by Time
 
-Q)  Can we establish a time-based trend in the dataset, such as changes in exercise preferences over time?
+Q2) Can we establish a time-based trend in the dataset, such as changes in exercise preferences over time?
 
-```{r Smart Question 5}
+```{r Smart Question 2}
 ggplot(df, aes(x=factor(Duration), fill=Exercise)) +
   geom_bar() +
   theme(axis.text.x = element_text(angle = 75, hjust =1))+
@@ -486,7 +477,7 @@ ggplot(df, aes(x=factor(Duration), fill=Exercise)) +
 
 ## Analysis by Weight
 
-Q)  How closely do individuals' dream weights align with their actual weights?
+Q6) How closely do individuals' dream weights align with their actual weights?
 
 ```{r Smart Question 6}
 # Create a new variable for the difference between Actual and Dream Weight
@@ -516,14 +507,14 @@ Solution:
 
 ***Defining the Hypothesis: H0: The mean 'Calories Burn' is the same for all 'BMI Classification' groups. H1: At least one 'BMI Classification' group has a different mean 'Calories Burn'.***
 
-```{r}
+```{r One-Way ANOVA Calories.Burn ~ BMI.Classification}
 # One-Way ANOVA
 anova_result <- aov(Calories.Burn ~ BMI.Classification, data = df)
 summary(anova_result)
 
 ```
 
-```{r}
+```{r above anova test summary}
 # Directly display the ANOVA summary to check p-value
 anova_summary <- summary(anova_result)
 print(anova_summary)
@@ -541,12 +532,9 @@ print(posthoc)
 
 ### Visualizations to Support ANOVA Findings
 
-```{r}
-# Load ggplot2 package
-library(ggplot2)
+```{r Boxplot of Calories Burn by BMI Classification}
 
 
-# Create a Colorful Boxplot
 ggplot(df, aes(x=BMI.Classification, y=Calories.Burn, fill=BMI.Classification)) +
   geom_boxplot() +
   scale_fill_brewer(palette="Set1") +
@@ -581,9 +569,111 @@ ggplot(df, aes(x=BMI.Classification, y=Calories.Burn)) +
 
 3.  Boxplot and Swarmplot: The swarmplot overlay on the boxplot displays individual data points, sampled to avoid clutter. This provides a sense of the data distribution while still summarizing it with a boxplot. Once more, the distribution of points appears quite similar across the 'BMI Classification' groups.
 
-### Correlation
+```{r}
+# Load the required library
+library(dplyr)
+
+# Apply Shapiro-Wilk test for each group
+df %>%
+  group_by(Weather.Conditions, Exercise.Intensity) %>%
+  summarise(p_value = shapiro.test(Heart.Rate)$p.value)
+
+```
 
 ```{r}
+# Load the required library
+library(car)
+# Convert Exercise.Intensity to factor
+df$Exercise.Intensity <- as.factor(df$Exercise.Intensity)
+
+# Apply Levene's test
+leveneTest(Heart.Rate ~ Weather.Conditions * Exercise.Intensity, data=df)
+```
+
+Observations: 1. P-value Interpretation: A common threshold for statistical significance is 0.05. In this case, the p-value is 0.9269, which is much greater than 0.05. Therefore, you fail to reject the null hypothesis. 2. Null Hypothesis for Levene's Test: The null hypothesis for Levene's test is that the variances are equal across all groups (combinations of Weather Conditions and Exercise Intensity levels). 3. Conclusion: Given that the p-value is much larger than 0.05, you would conclude that you do not have sufficient evidence to say that the variance of Heart Rate differs across the different combinations of Weather Conditions and Exercise Intensity. In simpler terms, the assumption of homogeneity of variances is met. 4. Implication for Two-Way ANOVA: Meeting this assumption means you can proceed with the Two-Way ANOVA without worrying about violating the homogeneity of variances assumption, which is crucial for the validity of your ANOVA results. This output indicates that outdata meets one of the key assumptions for conducting a Two-Way ANOVA, thereby making your subsequent analysis more robust and reliable. This aligns well with best practices in data science for ensuring the statistical validity of your findings.
+
+Building the Hypotheses When running a Two-Way ANOVA, we'll be testing three sets of null hypotheses:
+
+1.  Null Hypothesis for Weather Conditions Effect: There is no effect of weather conditions on heart rate. ***H0:μSunny = μRainy = μCloudy***
+
+2.  Null Hypothesis for Exercise Intensity Effect: There is no effect of exercise intensity on heart rate. ***H0:μIntensity 1 = μIntensity 2 = ... =μIntensity n***
+
+3.  Null Hypothesis for Interaction Effect: There is no interaction effect between weather conditions and exercise intensity on heart rate. ***H0:The effect of weather conditions on heart rate is the same at each level of exercise intensity***
+
+```{r}
+library(car)
+# Ensure that 'Weather.Conditions' and 'Exercise.Intensity' are factors
+df$Weather.Conditions <- as.factor(df$Weather.Conditions)
+df$Exercise.Intensity <- as.factor(df$Exercise.Intensity)
+
+# Two-Way ANOVA Model
+# Testing for main effects and interaction effect
+anova_model <- aov(Calories.Burn ~  Exercise * BMI.Classification , data = df)
+
+# Summary of the Model
+# This will show the F-value and p-value for each main effect and the interaction term
+summary(anova_model)
+
+# Post-hoc Tests (Tukey's HSD) for multiple comparisons, if necessary
+# This is relevant if any of the main or interaction effects are significant
+tukey_results <- TukeyHSD(anova_model)
+#head(tukey_results, n =10)
+```
+
+## ANOVA Results
+
+1.  Weather.Conditions: F = 0.103 , p = 0.902
+2.  Exercise.Intensity: F = 0.942, p = 0.487
+3.  Interaction: F = 1.112, p = 0.332
+
+### Tukey Multiple Comparisons
+
+The Tukey test provides pairwise comparisons, with the differences, lower and upper bounds of the 95% family-wise confidence interval, and adjusted p-values.
+
+### Interpretation of the Output
+
+#### Null Hypothesis for Weather Conditions Effect:
+
+-   Null Hypothesis: μSunny = μRainy = μCloudy
+-   F-value: 0.103
+-   p-value: 0.902
+
+Since the p-value is greater than 0.05, we fail to reject the null hypothesis. This suggests that weather conditions do not have a significant effect on heart rate.
+
+#### Null Hypothesis for Exercise Intensity Effect:
+
+-   Null Hypothesis: μIntensity 1 = μIntensity 2 = ... = μIntensity n
+-   F-value: 0.942
+-   p-value: 0.487
+
+Again, the p-value is greater than 0.05, indicating that exercise intensity levels do not have a significant effect on heart rate.
+
+#### Null Hypothesis for Interaction Effect:
+
+-   Null Hypothesis: The effect of weather conditions on heart rate is the same at each level of exercise intensity.
+-   F-value: 1.112
+-   p-value: 0.332
+
+The p-value is greater than 0.05, so we fail to reject the null hypothesis. This suggests that there is no interaction effect between weather conditions and exercise intensity on heart rate.
+
+### Tukey Test
+
+The Tukey test further confirms these findings. Most of the adjusted p-values are greater than 0.05, indicating that the pairwise differences between the levels of each factor are not statistically significant.
+
+### Summary
+
+No significant effect of weather conditions on heart rate. No significant effect of exercise intensity on heart rate. No significant interaction effect between weather conditions and exercise intensity on heart rate. These findings suggest that neither weather conditions nor exercise intensity have a significant impact on heart rate in this study, and there is no interaction effect between the two. This would mean that other variables might be influencing heart rate, which are not captured in the current model.
+
+```{r converting variables to different data types - 1}
+df$Age <- as.numeric(df$Age)
+df$Efficiency <- as.numeric(df$Efficiency)
+str(df)
+
+```
+
+### Correlation
+
+```{r converting variables to different data types}
 df$Gender <- as.factor(df$Gender)
 df$BMI.Classification <- as.factor(df$BMI.Classification)
 df$Weather.Conditions <- as.factor(df$Weather.Conditions)
@@ -591,7 +681,7 @@ df$Intensity <- as.factor(df$Intensity)
 df$Duration <- as.numeric(df$Duration)
 ```
 
-```{r}
+```{r selecting numeric columns}
 # Identify the numeric columns
 numeric_columns <- sapply(df, is.numeric)
 
@@ -599,7 +689,7 @@ numeric_columns <- sapply(df, is.numeric)
 correlation <- cor(df[, numeric_columns], use = "complete.obs")
 ```
 
-```{r}
+```{r correlation matrix}
 correlation <- correlation[-which(rownames(correlation) == "ID"), -which(colnames(correlation) == "ID")]
 
 library(corrplot)
@@ -612,9 +702,9 @@ corrplot(correlation, method = "color", type = "upper", tl.col = "black", tl.srt
 title("Correlation Heatmap")
 ```
 
-### Linear Model
+## Linear Model
 
-```{r}
+```{r linear model}
 linear_model <- lm(Calories.Burn ~ Efficiency + Duration, data = df)
 
 # Summarize the model
@@ -640,7 +730,7 @@ The linear regression model aims to predict "Calories Burn" based on two predict
 
 7.  **Residual Standard Error**: The residual standard error of 44.64 provides a measure of the typical prediction error of the model. Smaller values indicate better model fit.
 
-In summary, this linear regression model is highly significant and explains a substantial portion of the variance in "Calories Burn." Both "Efficiency" and "Duration" are strong predictors of calorie burn, with efficiency having the most substantial effect. However, it's essential to remember that regression models imply association, and they don't establish causation. Other factors not included in the model could also influence calorie burn.
+In summary, this linear regression model is highly significant and explains a substantial portion of the variance in "Calories Burn." Both "Efficiency" and "Duration" are strong predictors of calorie burn, with efficiency having the most substantial effect.
 
 ### Final Takeaway:
 
