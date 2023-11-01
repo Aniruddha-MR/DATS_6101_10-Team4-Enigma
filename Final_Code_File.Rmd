@@ -1,0 +1,853 @@
+---
+title: "Team 4 (Enigma) Final Code File"
+date: "2023-10-23"
+output:
+  html_document:
+    code_folding: hide
+    number_sections: false
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+```{r Setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Installing Required Packages
+
+```{r Packages}
+#install.packages("ggplot2")
+#install.packages("dplyr")
+#install.packages("corrplot")
+
+library(ggplot2)
+library(dplyr)
+library(corrplot)
+
+```
+
+## Data Preprocessing
+
+For the data preprocessing part, we will do three things for now: 1. Load the Dataset 2. Check for Missing Values 3. Check Variable Datatypes & Typecast if necessary
+
+```{r Loading dataset}
+#setwd = "C:\\Users\\YASH KATTIMANI\\Downloads"
+df = read.csv("newexercise_dataset.csv")
+str(df)
+```
+
+```{r Check for Missing Values}
+null_values <- sum(is.na(df))
+print(null_values)
+```
+
+Turns out there are 0 null values, so we can go ahead without having to worry about this aspect.
+
+```{r Typecasting}
+#converting exercise from char to factor
+df$Exercise <- as.factor(df$Exercise)
+df$Gender <- as.factor(df$Gender)
+df$Weather.Conditions <- as.factor(df$Weather.Conditions)
+```
+
+## Deep Dataset Analysis
+
+**Frequency of different Exercises**
+
+```{r Frequency of different Exercises}
+library(ggplot2)
+exercise_count <- ggplot(df, aes(x= Exercise, fill = Exercise)) +
+  geom_bar() +
+  labs(title ="Distribution of Exercise", x = "Exercise", y = "Frequency of Occurrence") +
+  theme(axis.text.x = element_text(angle = 75, hjust = 1)) +
+  scale_fill_manual(values = rainbow(length(unique(df$Exercise))))
+print(exercise_count)
+
+```
+
+-   **Limited Engagement in Aerobics**: The frequency of "Aerobics" is notably low compared to other types of exercise. This suggests either lack interest in or do not prioritizing aerobic exercises.
+
+-   **Basic Workout Anomaly**: Despite its generic label, "Basic Workout" has a surprisingly high frequency. This indicates people are engaged in simpler forms of exercise, or it might be a catch-all category for various other exercises not specified.
+
+**Classification of BMI values to 4 different categories**
+
+```{r Classification of BMI values to 4 categories}
+# Creating a new variable BMI.Classification based on BMI values
+df$BMI.Classification <- ifelse(df$BMI < 18.5, "Underweight",
+                                ifelse(df$BMI < 25, "Healthy weight",
+                                       ifelse(df$BMI < 30, "Overweight", "Obesity")))
+
+head(df)
+```
+
+**Classification of Levels of Intensity based on Intensity values**
+
+```{r Classification of Levels of Intensity}
+# Creating a new variable 'Intensity' based on Exercise.Intensity values
+df$Intensity <- ifelse(df$Exercise.Intensity < 3, "Low Intensity",
+                      ifelse(df$Exercise.Intensity < 6, "Medium Intensity", "High Intensity"))
+
+# View the first few rows of the updated dataframe to verify the new variable
+head(df)
+```
+
+**Converting Heart rate to different levels "Low", "Moderate", "Elevated", "High", "Very High"**
+
+```{r Converting Heart rate to different levels}
+breaks <- c(0, 100, 120, 140, 160, Inf)  # Customizing the breaks requirements
+labels <- c("Low", "Moderate", "Elevated", "High", "Very High")
+
+# Use the cut function to categorize Heart Rate into levels
+df$HeartRateLevel <- cut(df$Heart.Rate, breaks = breaks, labels = labels, right = FALSE)
+```
+
+## Analysis of Age
+
+```{r Age distribution density}
+# Create a density plot with KDE
+density_plot <- ggplot(df, aes(x = Age, fill = Gender, color = Gender)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Age distribution", x = "Age", y = "Density of Activity") +
+  theme_minimal() +
+  scale_fill_manual(values = c("blue", "red")) +
+  scale_color_manual(values = c("blue", "red"))
+
+print(density_plot)
+
+```
+
+-   Bimodal Distribution for Males: The age distribution for males exhibits a bimodal pattern with peaks around the mid-20s and late 40s. T distribution for females is bimodal and peaks around the early 30s late 50's.
+
+```{r Age distribution hist}
+# Load the ggplot2 library
+library(ggplot2)
+
+# Create a histogram with ggplot2
+hist_plot <- ggplot(df, aes(x = Age)) +
+  geom_histogram(binwidth = 5, fill = "lightblue", color = "black") +
+  labs(title = "Distribution of Age", x = "Age", y = "Frequency of Age Groups") +
+  theme_minimal()
+
+# Calculate the percentage of each bin and add percentage labels
+hist_plot <- hist_plot +
+  stat_bin(
+    binwidth = 5, 
+    geom = "text", 
+    aes(label = scales::percent(..count.. / sum(..count..))),
+    position = position_stack(vjust = 0.5)
+  )
+
+# Display the histogram plot
+print(hist_plot)
+
+```
+
+-   **Concentration in Mid-Age Groups**: The highest frequency of ages falls within the 25-35 age bracket, suggesting that this dataset predominantly consists of individuals who are in their late 20s to early 30s.
+
+-   **Sparse Older Population**: There is a noticeable decline in frequency for age groups above 50, indicating that fewer older individuals are represented in this exercise dataset.​​
+
+## Analysis of BMI
+
+Q)  Can the combination of heart rate and BMI be used to determine the optimal exercise duration for achieving dream weight?
+
+```{r Smart Question 5}
+ggplot(df, aes(y=Heart.Rate, x=BMI, color= BMI.Classification)) +
+  geom_point() +
+  ggtitle("Heart Rate and BMI vs Exercise Duration for Achieving Dream Weight")
+```
+
+-   **Variability in Heart Rate**: There is a wide range of heart rates for a given BMI value, suggesting that factors other than BMI might be influencing heart rate during exercise. This could be an area for further investigation.
+
+```{r Plot for classification of BMI values to 3 categories}
+library(ggplot2)
+
+library(ggplot2)
+
+# Create a bar plot
+bmi_bar_plot <- ggplot(df, aes(x = BMI.Classification, fill = BMI.Classification)) +
+  geom_bar() +
+  labs(title = "BMI Classification", x = "Classification", y = "Number of Individuals") +
+  scale_fill_manual(values = c(
+    "Underweight" = "red",
+    "Healthy weight" = "lightgreen",
+    "Overweight" = "maroon",
+    "Obesity" = "orange"
+  )) +
+  theme_minimal()
+
+# Calculate and add percentage labels to each bar
+bmi_bar_plot <- bmi_bar_plot +
+  geom_text(
+    aes(label = scales::percent(..count.. / sum(..count..)),
+        y = ..count..,
+        group = BMI.Classification),
+    stat = "count",
+    vjust = -0.5,  # Adjust the vertical position of labels
+    hjust = 0.5,   # Center the labels horizontally
+    position = position_stack(vjust = 0.5)
+  )
+
+# Display the bar plot
+print(bmi_bar_plot)
+
+
+```
+
+-   **Equal Datapoints**: The datapoints are almost equally spread within the three categories; Healthy, Obesity and Overweight. The below piechart shows the same data in a different graphical way.
+
+```{r Plot for classification of BMI values to 3 categories pie chart}
+# Calculating the distribution of BMI classifications
+bmi_class_counts <- table(df$BMI.Classification)
+
+# Calculating the percentages
+bmi_class_percentages <- prop.table(bmi_class_counts) * 100
+
+# Create a pie chart
+pie(bmi_class_counts, labels = paste(names(bmi_class_counts), "(", round(bmi_class_percentages, 1), "%)"), col = c("red", "green", "blue"))
+title("Distribution by BMI Classification")
+```
+
+```{r Exercise by BMI Classification & Box plot}
+
+# Create a bar plot with brighter, distinct colors
+bar_plot <- ggplot(df, aes(x = Exercise, fill = BMI.Classification)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Exercise by BMI Classification", x = "Exercise", y = "Number of Participants") +
+  scale_fill_manual(values = c(
+    "Underweight" = "magenta",    # Bright Magenta
+    "Overweight" = "cyan",        # Bright Cyan
+    "Obesity" = "orange",         # Bright Orange
+    "Healthy weight" = "purple"   # Bright Purple
+  )) +
+  theme(axis.text.x = element_text(angle = 75, hjust = 1))
+
+# Display the bar plot
+print(bar_plot)
+
+
+
+```
+
+-   **Diverse BMI Categories in High-Intensity Training:** High Intensity Training appears to attract participants from all BMI classifications, from "Underweight" to "Obesity", indicating that this form of exercise is popular across different health statuses.
+
+-   **Limited "Underweight" Participation:** There are notably fewer "Underweight" individuals participating in most types of exercise, except for "High Intensity Training". This could indicate a lack of engagement or interest among this particular group in the dataset.
+
+```{r percentage of exercises by gender}
+# Load required libraries
+library(ggplot2)
+library(dplyr)
+library(scales)
+
+# Group data and calculate frequency
+df_summary <- df %>%
+  group_by(Exercise, Gender) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  mutate(frequency = count * 100 / sum(count))
+
+# Create a grouped bar plot with enhanced colors and reduced transparency
+grouped_bar_plot <- ggplot(df_summary, aes(x = Gender, y = frequency, fill = Gender)) +
+  geom_bar(position = "dodge", stat = "identity", alpha = 1) +  # Set alpha to 1 for full opacity
+  scale_fill_manual(values = c("hotpink", "dodgerblue")) +  # More vibrant colors
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+  facet_wrap(~Exercise) +
+  theme_light() +
+  labs(title = "Gender-Based Participation in Different Forms of Exercise", fill = "Gender", x = "", y = "Percentage of Participation") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  theme(legend.position = "top")
+
+# Display the grouped bar plot
+print(grouped_bar_plot)
+
+```
+
+-   **Gender Disparity in Strength Training**: A significant majority of participants in "Strength Training" are males, indicating a possible gender preference for this type of exercise in the dataset.
+-   **Balanced Participation in Aerobics:** Unlike "Strength Training," "Aerobics" shows a more balanced gender distribution, suggesting that it appeals to both males and females in this dataset.
+
+```{r percentage of exercises by gender and BMI Classification}
+# Load required libraries
+library(dplyr)
+library(ggplot2)
+library(scales)
+
+# Calculate the count and frequency of BMI classifications by Exercise, Gender
+df_summary <- df %>%
+  group_by(Exercise, Gender, BMI.Classification) %>%
+  summarise(count = n()) %>%
+  mutate(frequency = count * 100 / sum(count))
+
+# Create a grouped bar plot with new colors
+grouped_bar_plot <- ggplot(df_summary, aes(x = Gender, y = frequency, fill = BMI.Classification)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  scale_fill_manual(values = c("Overweight" = "gold", "Obesity" = "purple", "Healthy weight" = "turquoise")) + # New colors
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+  facet_wrap(~Exercise) +
+  theme_light() +
+  labs(title = "Comparative Analysis of Exercise Participation by Gender and BMI Classification", fill = "BMI Classification", x = "", y = "Percentage of Participation") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  theme(legend.position = "top")
+
+# Display the grouped bar plot
+print(grouped_bar_plot)
+
+
+```
+
+-   **Predominance of "Healthy weight" in Males**: In almost all exercise types except for "Strength Training", the majority of male participants fall under the "Healthy weight" category. This could indicate that males in the "Healthy weight" BMI category are more inclined towards a diverse range of exercises.
+
+-   **Diverse BMI Categories in Females**: Unlike males, females show a more balanced distribution across different BMI categories for exercises like "High Intensity Training" and "Strength Training". This suggests that these exercises appeal to women of various BMI classifications.​​
+
+## Analysis by Calories burn and Exercise Intensity
+
+Q)  How do age, actual weight, and duration collectively influence the relationship between exercise intensity and calorie burn?
+
+```{r Smart Question 1}
+library(ggplot2)
+ggplot(df, aes(x=Age, y=Calories.Burn, color=Exercise.Intensity)) +
+  geom_point() +
+  ggtitle("Influence of Age on Exercise Intensity and Calorie Burn") +
+  xlab("Age") +
+  ylab("Calories Burnt") +
+  theme(panel.background = element_rect(fill = "white"))
+
+ggplot(df, aes(x=Actual.Weight, y=Calories.Burn, color=Exercise.Intensity)) +
+  geom_point() +
+  ggtitle("Influence of Actual Weight on Exercise Intensity and Calorie Burn") +
+  xlab("Actual Weight") +
+  ylab("Calories Burnt") +
+  theme(panel.background = element_rect(fill = "white"))
+
+ggplot(df, aes(x=Duration, y=Calories.Burn, color=Exercise.Intensity)) +
+  geom_point() +
+  ggtitle("Influence of Duration on Exercise Intensity and Calorie Burn") +
+  xlab("Duration") +
+  ylab("Calories Burnt") +
+  theme(panel.background = element_rect(fill = "white"))
+
+```
+
+-   **Age and Calorie Burn**: There seems to be no strong pattern between age and the calories burned across different exercise intensities. This could suggest that age is not a significant factor in determining how many calories one burns during exercise.
+
+-   **Duration and Calorie Burn**: The calories burned seem to increase with the duration of the exercise, irrespective of the exercise intensity. This suggests that the longer one exercises, the more calories they are likely to burn.
+
+-   **Actual Weight and Calorie Burn**: Similar to age, the actual weight also doesn't exhibit a strong trend with the calories burned. Exercise intensity colors are scattered across, indicating no clear relationship.
+
+```{r Relationship between Age, Duration, and Calorie Burn}
+# Create a scatterplot to visualize the relationship between Age, Duration, and Calories.Burn
+library(ggplot2)
+
+scatterplot <- ggplot(df, aes(x = Age, y = Duration, color = Calories.Burn)) +
+  geom_point() +
+  labs(title = "Relationship between Age, Duration, and Calorie Burn", x = "Age", y = "Duration") +
+  scale_color_gradient(low = "blue", high = "red") +
+  theme_minimal()
+
+print(scatterplot)
+
+```
+
+```{r Exercise Intensity vs Calories Burn}
+# Create a histogram with new colors
+exercise_calories <- ggplot(df, aes(x = Intensity, y = Calories.Burn)) +
+  geom_histogram(stat = 'identity', fill = 'purple', color = 'darkorange') +
+  labs(title = 'Exercise Intensity vs Calories Burn', x = 'Intensity', y = 'Calories Burn') +
+  theme_minimal()
+
+# Display the histogram
+print(exercise_calories)
+
+```
+
+-   **Low Engagement in Low Intensity**: There is a significantly lower caloric burn associated with "Low Intensity" exercises, suggesting either a lack of participation in such exercises or lower effectiveness in terms of calorie burning.​​
+
+```{r Exercise Efficiency}
+library(ggplot2)
+
+# Calculating efficiency
+df <- transform(df, Efficiency = Calories.Burn / Duration)
+
+# Sorting the data frame by efficiency in descending order
+df <- df[order(-df$Efficiency), ]
+
+# Defining a custom color palette
+my_colors <- c("Aerobics" = "blue", "Strength Training" = "green", "High Intensity Training" = "yellow",
+               "Weight Training" = "orange", "Yoga" = "red", "Basic Workout" = "purple", "Cardio" = "pink",
+               "Leg Workout" = "brown", "Circuit Training" = "gray", "Core Workout" = "cyan")
+
+# Creating a bar plot with updated axis labels
+efficiency_plot <- ggplot(df, aes(x = Efficiency, y = reorder(Exercise, -Efficiency))) +
+  geom_bar(stat = "identity", aes(fill = Exercise)) +
+  scale_fill_manual(values = my_colors) +
+  labs(title = "Exercise Efficiency", x = "Efficiency (Calories/Minute)", y = "Types of Exercise") +
+  theme_minimal()
+
+# Display the bar plot
+print(efficiency_plot)
+
+```
+
+-   **High-Efficiency Activities**: High Intensity Training seems to be the most efficient exercise in terms of calories burned per minute.
+
+-   **Low-Efficiency Activities**: Yoga and Basic Workout appear to be the least efficient for calorie burn per minute.
+
+```{r percentage of exercises by gender and intensity}
+# Load required libraries
+library(ggplot2)
+library(dplyr)
+library(scales)
+
+# Calculate the count and frequency of exercises by Exercise, Gender, and Intensity
+df_summary <- df %>%
+  group_by(Exercise, Gender, Intensity) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  mutate(frequency = count * 100 / sum(count))
+
+# Create a grouped bar plot with updated axis labels
+grouped_bar_plot <- ggplot(df_summary, aes(x = Gender, y = frequency, fill = Intensity)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  scale_fill_manual(values = c("red", "green", "blue", "purple", "orange", "pink", "yellow")) +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+  facet_wrap(~Exercise) +
+  theme_light() +
+  labs(title = "Gender and Intensity Distribution Across Different Exercises", x = "Gender", y = "Percentage of Participants") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  theme(legend.position = "top")
+
+# Display the grouped bar plot
+print(grouped_bar_plot)
+
+```
+
+-   **Intensity Variation**: For both genders, the majority of exercise sessions are of "Medium Intensity," followed by "High Intensity" and "Low Intensity". This might indicate a general preference for moderate exercise sessions across the population.
+
+-   **Gender Similarities**: Both genders seem to follow a similar distribution of exercise intensity, suggesting that the choice of exercise intensity is not significantly influenced by gender.
+
+### Analysis by Weather
+
+Q)  Are there exercises that are more commonly performed indoors or outdoors depending on the weather?
+
+```{r Smart Question 4}
+library(ggplot2)
+
+ggplot(df, aes(x=Exercise, fill=Weather.Conditions)) +
+  geom_bar() +
+  ggtitle("Exercises by Weather Conditions") +
+  labs(y = "Frequency of Exercises") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+
+-   **Weather-Neutral**: "High Intensity Training" and "Cardio" seem to be less affected by weather conditions, suggesting these exercises are versatile and can be performed both indoors and outdoors.
+
+```{r percentage of exercises by gender and weather}
+# Load required libraries
+library(ggplot2)
+library(dplyr)
+library(scales)
+
+# Calculate the count and frequency of exercises by Exercise, Gender, and Weather Conditions
+df_summary <- df %>%
+  group_by(Exercise, Gender, Weather.Conditions) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  mutate(frequency = count * 100 / sum(count))
+
+# Create a grouped bar plot with updated titles and colors
+grouped_bar_plot <- ggplot(df_summary, aes(x = Gender, y = frequency, fill = Weather.Conditions)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  scale_fill_manual(values = c("gold", "orange", "purple", "blue", "darkorange", "deeppink", "red", "darkcyan", "darkmagenta", "darkslategray")) +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+  facet_wrap(~Exercise) +
+  theme_light() +
+  labs(title = "Distribution of Exercise Types by Gender and Weather Conditions", x = "", y = "Proportion of Participants (%)") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  theme(legend.position = "top")
+
+# Display the grouped bar plot
+print(grouped_bar_plot)
+
+```
+
+-   **Gender-Neutral Weather Influence**: Both genders exhibit a similar pattern in terms of how weather conditions affect exercise type selection, suggesting that weather has a uniform impact across genders.
+
+```{r Relationship between weather and exercise}
+
+# Create a big grid of scatter plots with facets for Exercise and Weather Conditions
+scatter_grid <- ggplot(df, aes(x = Duration, y = `Exercise.Intensity`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +  # Add a line of best fit
+  facet_grid(Exercise ~ `Weather.Conditions`) +
+  labs(title = "Relationship between weather and exercise", x = "Duration", y = "Exercise Intensity") +
+  theme_minimal()+
+  theme(axis.text.y = element_blank())
+
+# Display the big grid of plots
+print(scatter_grid)
+```
+
+-   **Intensity and Duration Correlation**: There appears to be a weak positive correlation between exercise intensity and duration, regardless of the weather conditions. This could imply that longer workouts are generally more intense.
+
+-   **Weather-Independent**: The scatter of points across different weather conditions does not indicate a strong relationship between weather and either exercise duration or intensity.
+
+## Analysis by Gender
+
+Q)  Do males and females exhibit different patterns in terms of exercise variety?
+
+```{r Smart Question 3}
+library(ggplot2)
+
+# Create the bar plot
+bar_plot <- ggplot(df, aes(x = Exercise, fill = Gender)) +
+  geom_bar(position = "dodge") +
+  theme(axis.text.x = element_text(angle = 75, hjust = 1)) +
+  ggtitle("Exercise Variety by Gender") +
+  labs(y = "Frequency of Participants")
+
+# Display the plot
+print(bar_plot)
+
+
+```
+
+-   Males predominantly engage in Strength Training and Basic Workout, whereas females show a preference for Yoga and Aerobics.
+
+-   There's gender-based diversification in exercise types; for instance, more females engage in Yoga, while more males are into Strength Training.
+
+```{r Boxplot of BMI by Exercise Type and Gender}
+library(ggplot2)
+library(viridis)  # Load the viridis package
+
+# Create the box plot with the x and y axes interchanged
+box_plot <- ggplot(df, aes(x = Exercise, y = BMI, fill = Gender)) +
+  geom_boxplot() +
+  ggtitle("Boxplot of BMI by Exercise Type and Gender") +
+  theme(axis.text.x = element_text(angle = 75, hjust =1),panel.background = element_rect(fill = "white"),
+        plot.background = element_rect(fill = "white")) +
+  scale_fill_viridis(discrete = TRUE)
+
+# Display the plot
+print(box_plot)
+
+```
+
+-   The median BMI for most exercise types lies in the "Healthy Weight" range, but it varies by gender.
+
+-   Yoga and Aerobics attract participants with a lower range of BMI, indicating these exercises might be popular among individuals focusing on weight management.
+
+## Analysis by Time
+
+Q)  Can we establish a time-based trend in the dataset, such as changes in exercise preferences over time?
+
+```{r Smart Question 2}
+# Load ggplot2 library
+library(ggplot2)
+
+# Create the bar plot for exercise preferences by duration
+ggplot(df, aes(x=factor(Duration), fill=Exercise)) +
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = 75, hjust =1)) +
+  ggtitle("Exercise Preferences by Duration") +
+  labs(y = "Count of Exercise Sessions")
+
+
+```
+
+-   Short-duration exercises like High Intensity Training and Core Workout are popular, indicating people's preference for quick, intense workouts.
+
+-   Long-duration exercises are comparatively less popular, potentially due to time constraints or the intensity level required.
+
+## Analysis by Weight
+
+Q)  How closely do individuals' dream weights align with their actual weights?
+
+```{r Smart Question 6}
+# Create a new variable for the difference between Actual and Dream Weight
+df$Weight.Diff = abs(df$Actual.Weight - df$Dream.Weight)
+df$Weight.Diff.Bin = cut(df$Weight.Diff, breaks = c(0, 5, 10, 15, Inf), labels = c("0-5", "6-10", "11-15", "15+"))
+
+# Create the scatter plot
+ggplot(df, aes(x=Actual.Weight, y=Dream.Weight, color=Weight.Diff.Bin)) +
+  geom_point() +
+  scale_color_manual(values = c("0-5" = "blue", "6-10" = "green", "11-15" = "yellow", "15+" = "red")) +
+  ggtitle("Actual Weight vs Dream Weight")
+```
+
+-   Most data points cluster along the diagonal, indicating that many individuals' actual and dream weights are closely aligned.
+
+## Statistical Tests
+
+Q)  Do weather conditions have a statistically significant impact on the number of calories burned during exercise?" Ans) A suitable test for this question would be Analysis of Variance (ANOVA), particularly since we have more than two weather conditions in our dataset (e.g., Sunny, Rainy, Cloudy).
+
+**1. Data Filtering** First, lets remove any missing values for 'Weather Conditions' and 'Calories Burn'. But turns out there are no missing values in our data as we checked earlier. So we can proceed to the next step.
+
+**2. Data Grouping** First, lets remove any missing values for 'Weather Conditions' and 'Calories Burn'. But turns out there are no missing values in our data as we checked earlier. So we can proceed to the next step.
+
+## One Way Anova Test
+
+### Q) Is there a significant difference in the 'Calories Burn' across different 'BMI Classification' groups?
+
+Solution:
+
+***Defining the Hypothesis: H0: The mean 'Calories Burn' is the same for all 'BMI Classification' groups. H1: At least one 'BMI Classification' group has a different mean 'Calories Burn'.***
+
+```{r One-Way ANOVA Calories.Burn ~ BMI.Classification}
+# One-Way ANOVA
+anova_result <- aov(Calories.Burn ~ BMI.Classification, data = df)
+summary(anova_result)
+
+```
+
+```{r above anova test summary}
+# Directly display the ANOVA summary to check p-value
+anova_summary <- summary(anova_result)
+print(anova_summary)
+
+# Tukey HSD Test for Post-Hoc Analysis
+posthoc <- TukeyHSD(anova_result)
+print(posthoc)
+```
+
+### Interpretation:
+
+1.  ANOVA: The p-value from the ANOVA test is 0.509, which is greater than 0.05. This means that we fail to reject the null hypothesis (H0), suggesting there is no significant difference in 'Calories Burn' across the different 'BMI Classifications' in out dataset.
+
+2.  Post-Hoc Test: The Tukey HSD test also supports this result. All pairwise comparisons have adjusted p-values greater than 0.05, confirming that the mean 'Calories Burn' is not significantly different between any two 'BMI Classification' groups.
+
+### Visualizations to Support ANOVA Findings
+
+```{r Boxplot of Calories Burn by BMI Classification}
+
+
+ggplot(df, aes(x=BMI.Classification, y=Calories.Burn, fill=BMI.Classification)) +
+  geom_boxplot() +
+  scale_fill_brewer(palette="Set1") +
+  theme_minimal() +
+  ggtitle("Boxplot of 'Calories Burn' by 'BMI Classification'") +
+  xlab("BMI Classification") +
+  ylab("Calories Burn")
+
+
+ggplot(df, aes(x=BMI.Classification, y=Calories.Burn, fill=BMI.Classification)) +
+  geom_violin() +
+  scale_fill_brewer(palette="Set3") +
+  theme_minimal() +
+  ggtitle("Violinplot of 'Calories Burn' by 'BMI Classification'") +
+  xlab("BMI Classification") +
+  ylab("Calories Burn")
+
+
+
+ggplot(df, aes(x=BMI.Classification, y=Calories.Burn)) +
+  geom_boxplot(aes(fill=BMI.Classification), alpha=0.5) +
+  geom_jitter(aes(color=BMI.Classification), width=0.2) + 
+  ggtitle("Boxplot and Swarmplot of 'Calories Burn' by 'BMI Classification'") +
+  xlab("BMI Classification") +
+  ylab("Calories Burn")
+
+```
+
+1.  Boxplot: The boxplot shows the median, quartiles, and outliers for 'Calories Burn' for each 'BMI Classification'. The overlap of the interquartile ranges suggests that there's no significant difference in 'Calories Burn' across the groups.
+
+2.  Violinplot: The violinplot combines a boxplot with a kernel density estimation. It provides more information about the density of the data points at different calorie levels. Again, the shapes of the "violins" are quite similar for all categories, indicating no significant difference in 'Calories Burn'.
+
+3.  Boxplot and Swarmplot: The swarmplot overlay on the boxplot displays individual data points, sampled to avoid clutter. This provides a sense of the data distribution while still summarizing it with a boxplot. Once more, the distribution of points appears quite similar across the 'BMI Classification' groups.
+
+## Two Way Anova Test
+
+```{r}
+# Load the required library
+library(dplyr)
+
+# Apply Shapiro-Wilk test for each group
+df %>%
+  group_by(Weather.Conditions, Exercise.Intensity) %>%
+  summarise(p_value = shapiro.test(Heart.Rate)$p.value)
+
+```
+
+```{r}
+# Load the required library
+library(car)
+# Convert Exercise.Intensity to factor
+df$Exercise.Intensity <- as.factor(df$Exercise.Intensity)
+
+# Apply Levene's test
+leveneTest(Heart.Rate ~ Weather.Conditions * Exercise.Intensity, data=df)
+```
+
+**Observations:**
+
+-   P-value Interpretation: A common threshold for statistical significance is 0.05. In this case, the p-value is 0.9269, which is much greater than 0.05. Therefore, you fail to reject the null hypothesis.
+-   Null Hypothesis for Levene's Test: The null hypothesis for Levene's test is that the variances are equal across all groups (combinations of Weather Conditions and Exercise Intensity levels).
+-   Conclusion: Given that the p-value is much larger than 0.05, we would conclude that we do not have sufficient evidence to say that the variance of Heart Rate differs across the different combinations of Weather Conditions and Exercise Intensity. In simpler terms, the assumption of homogeneity of variances is met.
+-   Implication for Two-Way ANOVA: Meeting this assumption means we can proceed with the Two-Way ANOVA without worrying about violating the homogeneity of variances assumption, which is crucial for the validity of your ANOVA results. This output indicates that outdata meets one of the key assumptions for conducting a Two-Way ANOVA, thereby making your subsequent analysis more robust and reliable. This aligns well with best practices in data science for ensuring the statistical validity of your findings.
+
+**Building the Hypotheses When running a Two-Way ANOVA, we'll be testing three sets of null hypotheses:**
+
+**1.Null Hypothesis for Weather Conditions Effect:** There is no effect of weather conditions on heart rate.
+
+-   H0:μSunny = μRainy = μCloudy
+
+**2. Null Hypothesis for Exercise Intensity Effect:** There is no effect of exercise intensity on heart rate.
+
+-   H0:μIntensity 1 = μIntensity 2 = ... =μIntensity n
+
+**3. Null Hypothesis for Interaction Effect:** There is no interaction effect between weather conditions and exercise intensity on heart rate.
+
+-   H0:The effect of weather conditions on heart rate is the same at each level of exercise intensity
+
+```{r}
+library(car)
+# Ensure that 'Weather.Conditions' and 'Exercise.Intensity' are factors
+df$Weather.Conditions <- as.factor(df$Weather.Conditions)
+df$Exercise.Intensity <- as.factor(df$Exercise.Intensity)
+
+# Two-Way ANOVA Model
+# Testing for main effects and interaction effect
+anova_model <- aov(Calories.Burn ~  Exercise * BMI.Classification , data = df)
+
+# Summary of the Model
+# This will show the F-value and p-value for each main effect and the interaction term
+summary(anova_model)
+
+# Post-hoc Tests (Tukey's HSD) for multiple comparisons, if necessary
+# This is relevant if any of the main or interaction effects are significant
+tukey_results <- TukeyHSD(anova_model)
+#head(tukey_results, n =10)
+```
+
+**Two-Way ANOVA Results**
+
+1.  Weather.Conditions: F = 0.103 , p = 0.902
+2.  Exercise.Intensity: F = 0.942, p = 0.487
+3.  Interaction: F = 1.112, p = 0.332
+
+**Tukey Multiple Comparisons**
+
+The Tukey test provides pairwise comparisons, with the differences, lower and upper bounds of the 95% family-wise confidence interval, and adjusted p-values.
+
+**Interpretation of the Output**
+
+**Null Hypothesis for Weather Conditions Effect:**
+
+-   Null Hypothesis: μSunny = μRainy = μCloudy
+-   F-value: 0.103
+-   p-value: 0.902
+
+Since the p-value is greater than 0.05, we fail to reject the null hypothesis. This suggests that weather conditions do not have a significant effect on heart rate.
+
+**Null Hypothesis for Exercise Intensity Effect:**
+
+-   Null Hypothesis: μIntensity 1 = μIntensity 2 = ... = μIntensity n
+-   F-value: 0.942
+-   p-value: 0.487
+
+Again, the p-value is greater than 0.05, indicating that exercise intensity levels do not have a significant effect on heart rate.
+
+**Null Hypothesis for Interaction Effect:**
+
+-   Null Hypothesis: The effect of weather conditions on heart rate is the same at each level of exercise intensity.
+-   F-value: 1.112
+-   p-value: 0.332
+
+The p-value is greater than 0.05, so we fail to reject the null hypothesis. This suggests that there is no interaction effect between weather conditions and exercise intensity on heart rate.
+
+**Tukey Test**
+
+The Tukey test further confirms these findings. Most of the adjusted p-values are greater than 0.05, indicating that the pairwise differences between the levels of each factor are not statistically significant.
+
+**Summary**
+
+No significant effect of weather conditions on heart rate. No significant effect of exercise intensity on heart rate. No significant interaction effect between weather conditions and exercise intensity on heart rate. These findings suggest that neither weather conditions nor exercise intensity have a significant impact on heart rate in this study, and there is no interaction effect between the two. This would mean that other variables might be influencing heart rate, which are not captured in the current model.
+
+```{r converting variables to different data types - 1}
+df$Age <- as.numeric(df$Age)
+df$Efficiency <- as.numeric(df$Efficiency)
+str(df)
+
+```
+
+### Correlation
+
+```{r converting variables to different data types}
+df$Gender <- as.factor(df$Gender)
+df$BMI.Classification <- as.factor(df$BMI.Classification)
+df$Weather.Conditions <- as.factor(df$Weather.Conditions)
+df$Intensity <- as.factor(df$Intensity)
+df$Duration <- as.numeric(df$Duration)
+```
+
+```{r selecting numeric columns}
+# Identify the numeric columns
+numeric_columns <- sapply(df, is.numeric)
+
+# Calculate the correlation matrix for numeric variables
+correlation <- cor(df[, numeric_columns], use = "complete.obs")
+```
+
+```{r correlation matrix}
+# Load required library
+library(corrplot)
+
+# Create the correlation heatmap with adjusted margins
+corrplot(correlation, method = "color", type = "upper", tl.col = "black", tl.srt = 45, 
+         diag = FALSE, addCoef.col = "black", tl.cex = 0.7, mar = c(1,1,2,1))
+ 
+```
+
+## Linear Model
+
+```{r linear model}
+linear_model <- lm(Calories.Burn ~ Efficiency + Duration, data = df)
+
+# Summarize the model
+summary(linear_model)
+```
+
+The linear regression model aims to predict "Calories Burn" based on two predictor variables: "Efficiency" and "Duration." Here are some observations based on the model's summary:
+
+1.  **Model Fit**: The model provides a good fit for the data, with an adjusted R-squared value of 0.8515. This indicates that approximately 85.15% of the variance in "Calories Burn" is explained by the predictors, "Efficiency" and "Duration."
+
+2.  **Significant Predictors**: Both predictor variables, "Efficiency" and "Duration," are statistically significant in predicting "Calories Burn." The p-values associated with these predictors are very close to zero, suggesting a strong relationship between the predictors and the target variable.
+
+3.  **Intercept**: The intercept term (-233.63370) represents the estimated "Calories Burn" when both "Efficiency" and "Duration" are zero. While this value may not have a practical interpretation in this context, it's essential for the model's calculations.
+
+4.  **Coefficients**: The coefficients for the predictor variables provide insights into the relationship between each predictor and the target variable.
+
+    -   For "Efficiency," a one-unit increase results in an estimated increase of approximately 31 calories burned.
+    -   For "Duration," a one-minute increase results in an estimated increase of approximately 7 calories burned.
+
+5.  **Residuals**: The residuals indicate the model's prediction errors. The residuals are relatively symmetrically distributed around zero, suggesting that the model's assumptions about errors are reasonably met.
+
+6.  **F-Statistic**: The F-statistic tests whether the overall model is a good fit for the data. With a very high F-statistic and an associated p-value close to zero, it suggests that the model as a whole is a good fit.
+
+7.  **Residual Standard Error**: The residual standard error of 44.64 provides a measure of the typical prediction error of the model. Smaller values indicate better model fit.
+
+In summary, this linear regression model is highly significant and explains a substantial portion of the variance in "Calories Burn." Both "Efficiency" and "Duration" are strong predictors of calorie burn, with efficiency having the most substantial effect.
+
+**Summary:**
+
+The linear regression model is a robust predictor for "Calories Burn," accounting for approximately 85.15% of the variance in the target variable.The model's high F-statistic and near-zero p-value corroborate the overall fitness and significance of the model. The residual standard error of 44.64 suggests that the model's predictions are generally within this range of the actual observations, indicating a reasonably good fit. The coefficients suggest that a one-unit increase in "Efficiency" will result in burning approximately 31 additional calories, while a one-minute increase in "Duration" will lead to around 7 extra calories burned.
+
+## Project Final Takeaway
+
+The project successfully conducted a comprehensive analysis of exercise habits through data visualization and statistical testing. The key findings suggest that neither BMI nor weather conditions significantly affect the number of calories burned during exercise, debunking some commonly held beliefs. However, the limitations of the dataset indicate that there might be other unmeasured variables that could provide further insights.
+
+**Statistical Findings:**
+
+One-Way ANOVA: No significant difference was observed in calories burned across different BMI classifications. Two-Way ANOVA: Neither weather conditions nor exercise intensity had a significant impact on the number of calories burned.
+
+Based on these results, we can conclude that our initial hypothesis, which was to find out if there is a significant difference in 'Calories Burn' across 'BMI Classification' groups, is not supported by the data. Both the ANOVA and the post-hoc Tukey HSD test indicate that there are no significant differences in the 'Calories Burn' among the different 'BMI Classification' categories. All these visualizations reinforce the ANOVA findings that there is no significant difference in the 'Calories Burn' across different 'BMI Classification' categories. Furthermore, the from the linear regression model we look at two different predictor variables, "Efficiency" and "Duration," are statistically significant, with p-values close to zero, underscoring their importance in predicting calorie burn.
+
+**Limitations:** Data Completeness: No missing values were identified, but the dataset might not capture all factors affecting exercise habits. Sample Bias: The sample may not be fully representative of the general population.
+
+**Conclusion:** The project successfully conducted a comprehensive analysis of exercise habits through data visualization and statistical testing. The key findings suggest that neither BMI nor weather conditions significantly affect the number of calories burned during exercise, debunking some commonly held beliefs. However, the limitations of the dataset indicate that there might be other unmeasured variables that could provide further insights.
+
+**Future Work:** -
+
+-   Inclusion of More Variables: Factors like diet, work schedule, and mental health could be included for a more comprehensive analysis.
+-   Longitudinal Study: A time-series analysis could provide insights into seasonal or annual trends in exercise habits.
+-   Machine Learning Models: Predictive models could be developed to predict exercise habits or health outcomes based on the available variables.
